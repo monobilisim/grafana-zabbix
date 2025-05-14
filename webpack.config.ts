@@ -3,18 +3,30 @@ import { merge } from 'webpack-merge';
 import grafanaConfig from './.config/webpack/webpack.config';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import RemoveEmptyScriptsPlugin from 'webpack-remove-empty-scripts';
+import TerserPlugin from 'terser-webpack-plugin';
 
 const config = async (env): Promise<Configuration> => {
   const baseConfig = await grafanaConfig(env);
 
   return merge(baseConfig, {
-    // Add custom config here...
     entry: {
       module: './module.ts',
       'datasource/module': './datasource/module.ts',
       'panel-triggers/module': './panel-triggers/module.tsx',
       dark: './styles/dark.scss',
       light: './styles/light.scss',
+    },
+
+    optimization: {
+      minimizer: [
+        new TerserPlugin({
+          terserOptions: {
+            compress: {
+              drop_console: false,
+            },
+          },
+        }),
+      ],
     },
 
     module: {
