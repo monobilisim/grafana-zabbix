@@ -45,6 +45,7 @@ export class ExecScriptModalUnthemed extends PureComponent<Props, State> {
 
   async componentDidMount() {
     const scripts = await this.props.getScripts();
+    console.log(scripts);
     this.scripts = scripts;
     const scriptOptions: Array<SelectableValue<string>> = scripts.map((s) => {
       return {
