@@ -1,4 +1,7 @@
-all: install build test lint
+all: install build test lint restart
+restart:
+	docker compose -f /opt/grafana/docker-compose.yml down && \
+	docker compose -f /opt/grafana/docker-compose.yml up -d
 
 # Install dependencies
 install:
