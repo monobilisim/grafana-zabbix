@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, useContext } from 'react';
 import { css, cx } from '@emotion/css';
 import ReactTable from 'react-table-6';
 import _ from 'lodash';
@@ -44,7 +44,7 @@ const getStyles = stylesFactory(() => {
 });
 
 function ActionButtons(props) {
-  const problems = allProblems;
+  const problems = useContext(allProblems);
 
   console.log('problems:', problems);
   const handleAction = (actionType, e) => {
