@@ -62,7 +62,6 @@ export class ExecScriptModalUnthemed extends PureComponent<Props, State> {
 
   onChangeSelectedScript = (v: SelectableValue<string>) => {
     const script = this.scripts.find((s) => v.value === s.scriptid);
-    console.log(script);
     this.setState({ selectedScript: v, script, errorMessage: '', loading: false, result: '' });
   };
 

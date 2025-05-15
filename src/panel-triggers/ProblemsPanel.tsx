@@ -187,9 +187,7 @@ export const ProblemsPanel = (props: ProblemsPanelProps): JSX.Element => {
   const getScripts = async (problem: ProblemDTO) => {
     const hostid = problem.hosts?.length ? problem.hosts[0].hostid : null;
     const ds: any = await getDataSourceSrv().get(problem.datasource);
-    const resVal = ds.zabbix.getScripts([hostid]);
-    console.log(resVal);
-    return resVal;
+    return ds.zabbix.getScripts([hostid]);
   };
 
   const onExecuteScript = async (problem: ProblemDTO, scriptid: string): Promise<APIExecuteScriptResponse> => {
