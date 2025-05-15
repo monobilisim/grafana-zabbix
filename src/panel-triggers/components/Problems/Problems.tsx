@@ -1,4 +1,4 @@
-import React, { PureComponent, useContext } from 'react';
+import React, { PureComponent } from 'react';
 import { css, cx } from '@emotion/css';
 import ReactTable from 'react-table-6';
 import _ from 'lodash';
@@ -15,7 +15,7 @@ import { ProblemDTO, ZBXAlert, ZBXEvent, ZBXTag } from '../../../datasource/type
 import { APIExecuteScriptResponse, ZBXScript } from '../../../datasource/zabbix/connectors/zabbix_api/types';
 import { AckCell } from './AckCell';
 import { DataSourceRef, TimeRange } from '@grafana/data';
-import { reportInteraction } from '@grafana/runtime';
+import { reportInteraction, getDataSourceSrv } from '@grafana/runtime';
 const allProblems = React.createContext(null);
 const currentProblem = React.createContext(null);
 
@@ -44,27 +44,49 @@ const getStyles = stylesFactory(() => {
   };
 });
 
-function ActionButtons(props) {
-  const problems = useContext(allProblems);
-  const styles = getStyles();
-  const problem = props.original;
+const onExecuteScript = async (problem: ProblemDTO, scriptid: string): Promise<APIExecuteScriptResponse> => {
+  const hostid = problem.hosts?.length ? problem.hosts[0].hostid : null;
+  const eventid = problem.eventid && problem.eventid.trim() !== '' ? problem.eventid : undefined;
+  const ds: any = await getDataSourceSrv().get(problem.datasource);
 
-  console.log('problem:', problem);
+  const scriptsResponse = await ds.zabbix.getScripts(hostid ? [hostid] : undefined);
+  const targetScript = scriptsResponse.find((script) => script.scriptid === scriptid);
+
+  if (!targetScript) {
+    throw new Error(`Script with ID ${scriptid} not found`);
+  }
+
+  switch (targetScript.scope) {
+    case '4': // Event action
+      if (!eventid) {
+        throw new Error('EventID required for this script');
+      }
+      return ds.zabbix.executeScript(scriptid, undefined, eventid);
+    default:
+      throw new Error(`Unsupported script scope: ${targetScript.scope}`);
+  }
+};
+
+function ActionButtons(props) {
+  //const problems: ProblemDTO[] = useContext(allProblems);
+  const styles = getStyles();
+  const problem: ProblemDTO = props.original;
+
   const handleAction = (actionType, e) => {
     e.stopPropagation();
 
     switch (actionType) {
       case 'closeTicket':
-        // Implementation for closing a ticket
+        onExecuteScript(problem, '9');
         break;
       case 'createTicket':
-        // Implementation for creating a ticket
+        onExecuteScript(problem, '7');
         break;
       case 'sendEmail':
-        // Implementation for sending an email
+        onExecuteScript(problem, '10');
         break;
       case 'updateTicketId':
-        // Implementation for updating ticket ID
+        onExecuteScript(problem, '8');
         break;
     }
   };
