@@ -45,8 +45,10 @@ const getStyles = stylesFactory(() => {
 
 function ActionButtons(props) {
   const problems = useContext(allProblems);
+  const styles = getStyles();
+  const problem = props.original;
 
-  console.log('problems:', problems);
+  console.log('problem:', problem);
   const handleAction = (actionType, e) => {
     e.stopPropagation();
 
