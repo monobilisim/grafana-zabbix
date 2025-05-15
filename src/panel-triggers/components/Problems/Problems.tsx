@@ -46,6 +46,8 @@ function ActionButtons(props) {
   const problem = props.original;
   const styles = getStyles();
 
+  console.log('problem:', problem);
+
   const handleAction = (actionType, e) => {
     e.stopPropagation();
     console.log(`Action ${actionType} for problem:`, problem);
@@ -293,7 +295,20 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         width: 130, // Slightly wider to accommodate all buttons
         sortable: false,
         filterable: false,
-        Cell: ActionButtons,
+        Cell: (
+          <ActionButtons
+            rootWidth={this.rootWidth}
+            timeRange={this.props.timeRange}
+            panelId={this.props.panelId}
+            getProblemEvents={this.props.getProblemEvents}
+            getProblemAlerts={this.props.getProblemAlerts}
+            getScripts={this.props.getScripts}
+            onProblemAck={this.handleProblemAck}
+            onExecuteScript={this.props.onExecuteScript}
+            onTagClick={this.handleTagClick}
+            subRows={false}
+          />
+        ),
       },
       {
         Header: '',
