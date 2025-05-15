@@ -185,7 +185,7 @@ export const ProblemDetails = ({
           )}
           {problem.hosts && (
             <div>
-              <div id="debug-icin-ulan"></div>
+              <div id="debug-icin-ulan">debug</div>
               <ProblemHostsDescription hosts={problem.hosts} />
             </div>
           )}
