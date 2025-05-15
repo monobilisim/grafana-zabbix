@@ -28,6 +28,7 @@ export const ProblemHostsDescription = ({ hosts }: ProblemHostsProps) => {
   const styles = useStyles2(getStyles);
   return (
     <>
+      <div>test</div>
       <span className={styles.label}>Host description:&nbsp;</span>
       {hosts.map((h, i) => (
         <span key={`${h.hostid}-${i}`}>{h.description}</span>
