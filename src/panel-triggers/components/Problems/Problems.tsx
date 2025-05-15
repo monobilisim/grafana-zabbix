@@ -425,8 +425,15 @@ class TagCell extends PureComponent<TagCellProps> {
 
 function CustomExpander(props: RTCell<any>) {
   return (
-    <span className={props.isExpanded ? 'expanded' : ''}>
-      <i className="fa fa-info-circle"></i>
-    </span>
+    <>
+      <span className={props.isExpanded ? 'expanded' : ''}>
+        <i className="fa fa-info-circle"></i>
+      </span>
+
+      <i className="">1</i>
+      <i className="">2</i>
+      <i className="">3</i>
+      <i className="">4</i>
+    </>
   );
 }
