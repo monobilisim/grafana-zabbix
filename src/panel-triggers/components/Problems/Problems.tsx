@@ -41,6 +41,86 @@ const getStyles = stylesFactory(() => {
     actionColumn: css`
       text-align: center;
     `,
+    modalOverlay: css`
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    `,
+    modalContent: css`
+      background: #fff;
+      border-radius: 4px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 100%;
+      position: relative;
+    `,
+    modalHeader: css`
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+    `,
+    modalClose: css`
+      cursor: pointer;
+      font-size: 22px;
+      color: #666;
+      &:hover {
+        color: #333;
+      }
+    `,
+    formGroup: css`
+      margin-bottom: 15px;
+    `,
+    formLabel: css`
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    `,
+    formInput: css`
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    `,
+    formSelect: css`
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    `,
+    formButton: css`
+      background: #3274d9;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      &:hover {
+        background: #2264c9;
+      }
+    `,
+    buttonGroup: css`
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 15px;
+    `,
+    cancelButton: css`
+      background: #e0e0e0;
+      color: #333;
+      &:hover {
+        background: #d0d0d0;
+      }
+    `,
   };
 });
 
@@ -68,18 +148,22 @@ const onExecuteScript = async (problem: ProblemDTO, scriptid: string, input?: an
 };
 
 function ActionButtons(props: { original: ProblemDTO; }) {
-  //const problems: ProblemDTO[] = useContext(allProblems);
   const styles = getStyles();
   const problem: ProblemDTO = props.original;
-  const [showSelect, setShowSelect] = React.useState(false);
+  const [showModal, setShowModal] = React.useState(false);
   const [selectedValue, setSelectedValue] = React.useState('');
+  const [recipient, setRecipient] = React.useState('');
+  const [subject, setSubject] = React.useState('');
+  const [message, setMessage] = React.useState('');
 
   const handleAction = (actionType: string, e: { stopPropagation: () => void; }) => {
     e.stopPropagation();
 
     switch (actionType) {
       case 'sendEmail':
-        setShowSelect(true);
+        setShowModal(true);
+        setSubject(`Problem: ${problem.name}`);
+        setMessage(`Problem details:\n${problem.name}\nHost: ${problem.host}`);
         break;
       case 'closeTicket':
         onExecuteScript(problem, '9');
@@ -97,10 +181,34 @@ function ActionButtons(props: { original: ProblemDTO; }) {
     setSelectedValue(e.target.value);
   };
 
+  const handleRecipientChange = (e) => {
+    setRecipient(e.target.value);
+  };
+
+  const handleSubjectChange = (e) => {
+    setSubject(e.target.value);
+  };
+
+  const handleMessageChange = (e) => {
+    setMessage(e.target.value);
+  };
+
   const handleSend = () => {
-    onExecuteScript(problem, '10', { manuelinput: selectedValue });
-    setShowSelect(false);
+    onExecuteScript(problem, '10', { 
+      manuelinput: selectedValue,
+      recipient: recipient,
+      subject: subject,
+      message: message
+    });
+    closeModal();
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
     setSelectedValue('');
+    setRecipient('');
+    setSubject('');
+    setMessage('');
   };
 
   return (
@@ -120,21 +228,82 @@ function ActionButtons(props: { original: ProblemDTO; }) {
         onClick={(e: any) => handleAction('sendEmail', e)}
         title="Send email"
       ></i>
-      {showSelect && (
-        <div>
-          <select name="manuelinput" value={selectedValue} onChange={handleSelectChange}>
-            <option value="">Seçiniz</option>
-            <option value="option1">Seçenek 1</option>
-            <option value="option2">Seçenek 2</option>
-          </select>
-          <button onClick={handleSend}>Gönder</button>
-        </div>
-      )}
       <i
         className={cx('fa fa-pencil-square-o', styles.actionIcon)}
         onClick={(e: any) => handleAction('updateTicketId', e)}
         title="Update ticket ID"
       ></i>
+
+      {showModal && (
+        <div className={styles.modalOverlay} onClick={closeModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <span>Send Email</span>
+              <span className={styles.modalClose} onClick={closeModal}>&times;</span>
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Template</label>
+              <select 
+                className={styles.formSelect} 
+                value={selectedValue} 
+                onChange={handleSelectChange}
+              >
+                <option value="">Select template</option>
+                <option value="option1">Template 1</option>
+                <option value="option2">Template 2</option>
+                <option value="custom">Custom message</option>
+              </select>
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Recipient</label>
+              <input 
+                type="email" 
+                className={styles.formInput} 
+                value={recipient} 
+                onChange={handleRecipientChange} 
+                placeholder="Enter email address"
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Subject</label>
+              <input 
+                type="text" 
+                className={styles.formInput} 
+                value={subject} 
+                onChange={handleSubjectChange}
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Message</label>
+              <textarea 
+                className={styles.formInput} 
+                value={message} 
+                onChange={handleMessageChange}
+                rows={5}
+              />
+            </div>
+            
+            <div className={styles.buttonGroup}>
+              <button 
+                className={cx(styles.formButton, styles.cancelButton)} 
+                onClick={closeModal}
+              >
+                Cancel
+              </button>
+              <button 
+                className={styles.formButton} 
+                onClick={handleSend}
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
