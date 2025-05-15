@@ -47,7 +47,7 @@ const getStyles = stylesFactory(() => {
 function ActionButtons(props) {
   const problems = useContext(allProblems);
   const styles = getStyles();
-  const problem = useContext(currentProblem);
+  const problem = props.original;
 
   console.log('problem:', problem);
   const handleAction = (actionType, e) => {
@@ -298,6 +298,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         filterable: false,
         Cell: (
           <ActionButtons
+            original={this.original}
             rootWidth={this.rootWidth}
             timeRange={this.props.timeRange}
             panelId={this.props.panelId}
