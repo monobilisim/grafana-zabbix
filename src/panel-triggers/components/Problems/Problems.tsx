@@ -16,6 +16,17 @@ import { AckCell } from './AckCell';
 import { DataSourceRef, TimeRange } from '@grafana/data';
 import { reportInteraction } from '@grafana/runtime';
 
+function ActionButtons() {
+  return (
+    <>
+      <i className="">1</i>
+      <i className="">2</i>
+      <i className="">3</i>
+      <i className="">4</i>
+    </>
+  );
+}
+
 export interface ProblemListProps {
   problems: ProblemDTO[];
   panelOptions: ProblemsPanelOptions;
@@ -209,7 +220,15 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         id: 'lastchange',
         Cell: (props) => LastChangeCell(props, options.customLastChangeFormat && options.lastChangeFormat),
       },
-      { Header: '', className: 'custom-expander', width: 60, expander: true, Expander: CustomExpander },
+      { Header: 'Actions', className: '', width: 64, show: '', Cell: <ActionButtons /> },
+      {
+        Header: '',
+        className: 'custom-expander',
+        width: 60,
+        expander: true,
+        Expander: CustomExpander,
+        Actions: ActionButtons,
+      },
     ];
     for (const column of columns) {
       if (column.show || column.show === undefined) {
@@ -425,15 +444,8 @@ class TagCell extends PureComponent<TagCellProps> {
 
 function CustomExpander(props: RTCell<any>) {
   return (
-    <>
-      <span className={props.isExpanded ? 'expanded' : ''}>
-        <i className="fa fa-info-circle"></i>
-      </span>
-
-      <i className="">1</i>
-      <i className="">2</i>
-      <i className="">3</i>
-      <i className="">4</i>
-    </>
+    <span className={props.isExpanded ? 'expanded' : ''}>
+      <i className="fa fa-info-circle"></i>
+    </span>
   );
 }
