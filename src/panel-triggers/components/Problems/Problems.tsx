@@ -35,7 +35,7 @@ const getStyles = stylesFactory(() => {
 
       &:hover {
         background-color: rgba(204, 204, 220, 0.2);
-        color: #ffffff;
+        color: #181b1f;
       }
     `,
     actionColumn: css`
@@ -166,13 +166,13 @@ function ActionButtons(props: { original: ProblemDTO; }) {
         setMessage(`Problem details:\n${problem.name}\nHost: ${problem.host}`);
         break;
       case 'closeTicket':
-        onExecuteScript(problem, '9');
-        break;
-      case 'createTicket':
         onExecuteScript(problem, '7');
         break;
+      case 'createTicket':
+        onExecuteScript(problem, '4');
+        break;
       case 'updateTicketId':
-        onExecuteScript(problem, '8');
+        onExecuteScript(problem, '6');
         break;
     }
   };
@@ -194,7 +194,7 @@ function ActionButtons(props: { original: ProblemDTO; }) {
   };
 
   const handleSend = () => {
-    onExecuteScript(problem, '10', { 
+    onExecuteScript(problem, '8', { 
       manuelinput: selectedValue,
       recipient: recipient,
       subject: subject,
@@ -246,45 +246,13 @@ function ActionButtons(props: { original: ProblemDTO; }) {
               <label className={styles.formLabel}>Template</label>
               <select 
                 className={styles.formSelect} 
+                name="manualinput"
                 value={selectedValue} 
                 onChange={handleSelectChange}
               >
                 <option value="">Select template</option>
-                <option value="option1">Template 1</option>
-                <option value="option2">Template 2</option>
-                <option value="custom">Custom message</option>
+                <option value="TEST">TEST</option>
               </select>
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Recipient</label>
-              <input 
-                type="email" 
-                className={styles.formInput} 
-                value={recipient} 
-                onChange={handleRecipientChange} 
-                placeholder="Enter email address"
-              />
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Subject</label>
-              <input 
-                type="text" 
-                className={styles.formInput} 
-                value={subject} 
-                onChange={handleSubjectChange}
-              />
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Message</label>
-              <textarea 
-                className={styles.formInput} 
-                value={message} 
-                onChange={handleMessageChange}
-                rows={5}
-              />
             </div>
             
             <div className={styles.buttonGroup}>
