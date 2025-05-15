@@ -17,6 +17,7 @@ import { AckCell } from './AckCell';
 import { DataSourceRef, TimeRange } from '@grafana/data';
 import { reportInteraction } from '@grafana/runtime';
 const allProblems = React.createContext(null);
+const currentProblem = React.createContext(null);
 
 const getStyles = stylesFactory(() => {
   return {
@@ -46,7 +47,7 @@ const getStyles = stylesFactory(() => {
 function ActionButtons(props) {
   const problems = useContext(allProblems);
   const styles = getStyles();
-  const problem = props.original;
+  const problem = useContext(currentProblem);
 
   console.log('problem:', problem);
   const handleAction = (actionType, e) => {
@@ -353,21 +354,23 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
             loading={this.props.loading}
             noDataText="No problems found"
             SubComponent={(props) => (
-              <ProblemDetails
-                {...props}
-                rootWidth={this.rootWidth}
-                timeRange={this.props.timeRange}
-                showTimeline={panelOptions.problemTimeline}
-                allowDangerousHTML={panelOptions.allowDangerousHTML}
-                panelId={this.props.panelId}
-                getProblemEvents={this.props.getProblemEvents}
-                getProblemAlerts={this.props.getProblemAlerts}
-                getScripts={this.props.getScripts}
-                onProblemAck={this.handleProblemAck}
-                onExecuteScript={this.props.onExecuteScript}
-                onTagClick={this.handleTagClick}
-                subRows={false}
-              />
+              <currentProblem.Provider value={props.original}>
+                <ProblemDetails
+                  {...props}
+                  rootWidth={this.rootWidth}
+                  timeRange={this.props.timeRange}
+                  showTimeline={panelOptions.problemTimeline}
+                  allowDangerousHTML={panelOptions.allowDangerousHTML}
+                  panelId={this.props.panelId}
+                  getProblemEvents={this.props.getProblemEvents}
+                  getProblemAlerts={this.props.getProblemAlerts}
+                  getScripts={this.props.getScripts}
+                  onProblemAck={this.handleProblemAck}
+                  onExecuteScript={this.props.onExecuteScript}
+                  onTagClick={this.handleTagClick}
+                  subRows={false}
+                />
+              </currentProblem.Provider>
             )}
             expanded={this.getExpandedPage(this.state.page)}
             onExpandedChange={this.handleExpandedChange}
