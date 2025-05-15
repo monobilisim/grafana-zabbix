@@ -78,7 +78,7 @@ lint:
 sign-package:
 	yarn sign
 
-package: install dist sign-package
+package: install dist
 
 zip:
 	cp -r dist/ alexanderzobnin-zabbix-app
