@@ -44,13 +44,13 @@ const getStyles = stylesFactory(() => {
   };
 });
 
-const onExecuteScript = async (problem: ProblemDTO, scriptid: string): Promise<APIExecuteScriptResponse> => {
+const onExecuteScript = async (problem: ProblemDTO, scriptid: string, input?: any): Promise<APIExecuteScriptResponse> => {
   const hostid = problem.hosts?.length ? problem.hosts[0].hostid : null;
   const eventid = problem.eventid && problem.eventid.trim() !== '' ? problem.eventid : undefined;
   const ds: any = await getDataSourceSrv().get(problem.datasource);
 
   const scriptsResponse = await ds.zabbix.getScripts(hostid ? [hostid] : undefined);
-  const targetScript = scriptsResponse.find((script) => script.scriptid === scriptid);
+  const targetScript = scriptsResponse.find((script: { scriptid: string; }) => script.scriptid === scriptid);
 
   if (!targetScript) {
     throw new Error(`Script with ID ${scriptid} not found`);
@@ -61,29 +61,31 @@ const onExecuteScript = async (problem: ProblemDTO, scriptid: string): Promise<A
       if (!eventid) {
         throw new Error('EventID required for this script');
       }
-      return ds.zabbix.executeScript(scriptid, undefined, eventid);
+      return ds.zabbix.executeScript(scriptid, input, eventid);
     default:
       throw new Error(`Unsupported script scope: ${targetScript.scope}`);
   }
 };
 
-function ActionButtons(props) {
+function ActionButtons(props: { original: ProblemDTO; }) {
   //const problems: ProblemDTO[] = useContext(allProblems);
   const styles = getStyles();
   const problem: ProblemDTO = props.original;
+  const [showSelect, setShowSelect] = React.useState(false);
+  const [selectedValue, setSelectedValue] = React.useState('');
 
-  const handleAction = (actionType, e) => {
+  const handleAction = (actionType: string, e: { stopPropagation: () => void; }) => {
     e.stopPropagation();
 
     switch (actionType) {
+      case 'sendEmail':
+        setShowSelect(true);
+        break;
       case 'closeTicket':
         onExecuteScript(problem, '9');
         break;
       case 'createTicket':
         onExecuteScript(problem, '7');
-        break;
-      case 'sendEmail':
-        onExecuteScript(problem, '10');
         break;
       case 'updateTicketId':
         onExecuteScript(problem, '8');
@@ -91,26 +93,46 @@ function ActionButtons(props) {
     }
   };
 
+  const handleSelectChange = (e) => {
+    setSelectedValue(e.target.value);
+  };
+
+  const handleSend = () => {
+    onExecuteScript(problem, '10', { manuelinput: selectedValue });
+    setShowSelect(false);
+    setSelectedValue('');
+  };
+
   return (
     <div className={styles.actionButtons}>
       <i
         className={cx('fa fa-check-square-o', styles.actionIcon)}
-        onClick={(e) => handleAction('closeTicket', e)}
+        onClick={(e: any) => handleAction('closeTicket', e)}
         title="Close ticket"
       ></i>
       <i
         className={cx('fa fa-plus-square', styles.actionIcon)}
-        onClick={(e) => handleAction('createTicket', e)}
+        onClick={(e: any) => handleAction('createTicket', e)}
         title="Create ticket"
       ></i>
       <i
         className={cx('fa fa-envelope-o', styles.actionIcon)}
-        onClick={(e) => handleAction('sendEmail', e)}
+        onClick={(e: any) => handleAction('sendEmail', e)}
         title="Send email"
       ></i>
+      {showSelect && (
+        <div>
+          <select name="manuelinput" value={selectedValue} onChange={handleSelectChange}>
+            <option value="">Seçiniz</option>
+            <option value="option1">Seçenek 1</option>
+            <option value="option2">Seçenek 2</option>
+          </select>
+          <button onClick={handleSend}>Gönder</button>
+        </div>
+      )}
       <i
         className={cx('fa fa-pencil-square-o', styles.actionIcon)}
-        onClick={(e) => handleAction('updateTicketId', e)}
+        onClick={(e: any) => handleAction('updateTicketId', e)}
         title="Update ticket ID"
       ></i>
     </div>
@@ -166,13 +188,13 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
 
   onExecuteScript = (problem: ProblemDTO, data: AckProblemData) => {};
 
-  handlePageSizeChange = (pageSize, pageIndex) => {
+  handlePageSizeChange = (pageSize: any, pageIndex: any) => {
     if (this.props.onPageSizeChange) {
       this.props.onPageSizeChange(pageSize, pageIndex);
     }
   };
 
-  handleResizedChange = (newResized, event) => {
+  handleResizedChange = (newResized: any, event: any) => {
     if (this.props.onColumnResize) {
       this.props.onColumnResize(newResized);
     }
@@ -237,12 +259,12 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     const result = [];
     const options = this.props.panelOptions;
     const highlightNewerThan = options.highlightNewEvents && options.highlightNewerThan;
-    const statusCell = (props) => StatusCell(props, highlightNewerThan);
-    const statusIconCell = (props) => StatusIconCell(props, highlightNewerThan);
-    const hostNameCell = (props) => (
+    const statusCell = (props: RTCell<ProblemDTO>) => StatusCell(props, highlightNewerThan);
+    const statusIconCell = (props: RTCell<ProblemDTO>) => StatusIconCell(props, highlightNewerThan);
+    const hostNameCell = (props: { original: { host: any; hostInMaintenance: any; }; }) => (
       <HostCell name={props.original.host} maintenance={props.original.hostInMaintenance} />
     );
-    const hostTechNameCell = (props) => (
+    const hostTechNameCell = (props: { original: { hostTechName: any; hostInMaintenance: any; }; }) => (
       <HostCell name={props.original.hostTechName} maintenance={props.original.hostInMaintenance} />
     );
 
@@ -256,9 +278,9 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         show: options.severityField,
         className: 'problem-severity',
         width: 120,
-        accessor: (problem) => problem.priority,
+        accessor: (problem: { priority: any; }) => problem.priority,
         id: 'severity',
-        Cell: (props) =>
+        Cell: (props: RTCell<ProblemDTO>) =>
           SeverityCell(
             props,
             options.triggerSeverity,
@@ -284,14 +306,14 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         id: 'ack',
         show: options.ackField,
         width: 70,
-        Cell: (props) => <AckCell {...props} />,
+        Cell: (props: unknown) => <AckCell {...props} />,
       },
       {
         Header: 'Tags',
         accessor: 'tags',
         show: options.showTags,
         className: 'problem-tags',
-        Cell: (props) => <TagCell {...props} onTagClick={this.handleTagClick} />,
+        Cell: (props: unknown) => <TagCell {...props} onTagClick={this.handleTagClick} />,
       },
       {
         Header: 'Age',
@@ -308,7 +330,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         width: 150,
         accessor: 'timestamp',
         id: 'lastchange',
-        Cell: (props) => LastChangeCell(props, options.customLastChangeFormat && options.lastChangeFormat),
+        Cell: (props: RTCell<ProblemDTO>) => LastChangeCell(props, options.customLastChangeFormat && options.lastChangeFormat),
       },
       {
         Header: 'Actions',
@@ -318,7 +340,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         width: 130, // Slightly wider to accommodate all buttons
         sortable: false,
         filterable: false,
-        Cell: (props) => {
+        Cell: (props: { original: any; }) => {
           const original = props.original;
 
           return <ActionButtons original={original} />;
@@ -386,7 +408,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
             )}
             expanded={this.getExpandedPage(this.state.page)}
             onExpandedChange={this.handleExpandedChange}
-            onPageChange={(page) => {
+            onPageChange={(page: number) => {
               reportInteraction('grafana_zabbix_panel_page_change', {
                 action: page > this.state.page ? 'next' : 'prev',
               });
@@ -428,9 +450,9 @@ function SeverityCell(
 
   let severityDesc: TriggerSeverity;
   const severity = Number(problem.severity);
-  severityDesc = _.find(problemSeverityDesc, (s) => s.priority === severity);
+  severityDesc = _.find(problemSeverityDesc, (s: { priority: number; }) => s.priority === severity);
   if (problem.severity && problem.value === '1') {
-    severityDesc = _.find(problemSeverityDesc, (s) => s.priority === severity);
+    severityDesc = _.find(problemSeverityDesc, (s: { priority: number; }) => s.priority === severity);
   }
 
   color = problem.value === '0' ? okColor : severityDesc.color;
@@ -482,7 +504,7 @@ function StatusIconCell(props: RTCell<ProblemDTO>, highlightNewerThan?: string) 
 function GroupCell(props: RTCell<ProblemDTO>) {
   let groups = '';
   if (props.value && props.value.length) {
-    groups = props.value.map((g) => g.name).join(', ');
+    groups = props.value.map((g: { name: any; }) => g.name).join(', ');
   }
   return <span>{groups}</span>;
 }
@@ -536,7 +558,7 @@ class TagCell extends PureComponent<TagCellProps> {
   render() {
     const tags = this.props.value || [];
     return [
-      tags.map((tag) => (
+      tags.map((tag: ZBXTag) => (
         <EventTag
           key={tag.tag + tag.value}
           tag={tag}
