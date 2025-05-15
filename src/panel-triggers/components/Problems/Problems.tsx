@@ -1,9 +1,10 @@
 import React, { PureComponent } from 'react';
-import { cx } from '@emotion/css';
+import { css, cx } from '@emotion/css';
 import ReactTable from 'react-table-6';
 import _ from 'lodash';
 // eslint-disable-next-line
 import moment from 'moment';
+import { stylesFactory } from '@grafana/ui';
 import { isNewProblem } from '../../utils';
 import { EventTag } from '../EventTag';
 import { ProblemDetails } from './ProblemDetails';
@@ -16,14 +17,78 @@ import { AckCell } from './AckCell';
 import { DataSourceRef, TimeRange } from '@grafana/data';
 import { reportInteraction } from '@grafana/runtime';
 
-function ActionButtons() {
+const getStyles = stylesFactory(() => {
+  return {
+    actionButtons: css`
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    `,
+    actionIcon: css`
+      padding: 4px;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background-color 0.2s ease;
+      margin: 0 2px;
+
+      &:hover {
+        background-color: rgba(204, 204, 220, 0.2);
+        color: #ffffff;
+      }
+    `,
+    actionColumn: css`
+      text-align: center;
+    `,
+  };
+});
+
+function ActionButtons(props) {
+  const problem = props.original;
+  const styles = getStyles();
+
+  const handleAction = (actionType, e) => {
+    e.stopPropagation();
+    console.log(`Action ${actionType} for problem:`, problem);
+
+    switch (actionType) {
+      case 'closeTicket':
+        // Implementation for closing a ticket
+        break;
+      case 'createTicket':
+        // Implementation for creating a ticket
+        break;
+      case 'sendEmail':
+        // Implementation for sending an email
+        break;
+      case 'updateTicketId':
+        // Implementation for updating ticket ID
+        break;
+    }
+  };
+
   return (
-    <>
-      <i className="">1</i>
-      <i className="">2</i>
-      <i className="">3</i>
-      <i className="">4</i>
-    </>
+    <div className={styles.actionButtons}>
+      <i
+        className={cx('fa fa-check-square-o', styles.actionIcon)}
+        onClick={(e) => handleAction('closeTicket', e)}
+        title="Close ticket"
+      ></i>
+      <i
+        className={cx('fa fa-plus-square', styles.actionIcon)}
+        onClick={(e) => handleAction('createTicket', e)}
+        title="Create ticket"
+      ></i>
+      <i
+        className={cx('fa fa-envelope-o', styles.actionIcon)}
+        onClick={(e) => handleAction('sendEmail', e)}
+        title="Send email"
+      ></i>
+      <i
+        className={cx('fa fa-pencil-square-o', styles.actionIcon)}
+        onClick={(e) => handleAction('updateTicketId', e)}
+        title="Update ticket ID"
+      ></i>
+    </div>
   );
 }
 
@@ -220,14 +285,22 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         id: 'lastchange',
         Cell: (props) => LastChangeCell(props, options.customLastChangeFormat && options.lastChangeFormat),
       },
-      { Header: 'Actions', className: '', width: 64, show: '', Cell: <ActionButtons /> },
+      {
+        Header: 'Actions',
+        id: 'actions',
+        show: true,
+        className: getStyles().actionColumn,
+        width: 130, // Slightly wider to accommodate all buttons
+        sortable: false,
+        filterable: false,
+        Cell: ActionButtons,
+      },
       {
         Header: '',
         className: 'custom-expander',
         width: 60,
         expander: true,
         Expander: CustomExpander,
-        Actions: ActionButtons,
       },
     ];
     for (const column of columns) {
