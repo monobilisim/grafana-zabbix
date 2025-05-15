@@ -37,34 +37,12 @@ dist: dist-frontend dist-backend
 dist-frontend:
 	yarn build
 
-dist-backend: dist-backend-mage dist-backend-freebsd dist-arm-freebsd-arm64
+dist-backend: dist-backend-mage
 dist-backend-mage:
 	mage -v buildAll
-dist-backend-windows: extension = .exe
 dist-backend-%:
 	$(eval filename = gpx_zabbix-plugin_$*_amd64$(extension))
 	env CGO_ENABLED=0 GOOS=$* GOARCH=amd64 go build -ldflags="-s -w" -o ./dist/$(filename) ./pkg
-
-# ARM
-dist-arm: dist-arm-linux-arm-v6 dist-arm-linux-arm64 dist-arm-darwin-arm64 dist-arm-freebsd-arm64
-dist-arm-linux-arm-v6:
-	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -ldflags="-s -w" -o ./dist/gpx_zabbix-plugin_linux_arm ./pkg
-dist-arm-linux-arm-v7:
-	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s -w" -o ./dist/gpx_zabbix-plugin_linux_arm ./pkg
-dist-arm-%-arm64:
-	$(eval filename = gpx_zabbix-plugin_$*_arm64$(extension))
-	env CGO_ENABLED=0 GOOS=$* GOARCH=arm64 go build -ldflags="-s -w" -o ./dist/$(filename) ./pkg
-
-.PHONY: test
-test: test-frontend test-backend
-test-frontend:
-	yarn test
-test-backend:
-	go test ./pkg/...
-test-ci:
-	yarn ci-test
-	mkdir -p tmp/coverage/golang/
-	go test -race -coverprofile=tmp/coverage/golang/coverage.txt -covermode=atomic ./pkg/...
 
 .PHONY: clean
 clean:
