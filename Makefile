@@ -1,4 +1,4 @@
-all: install build lint dist restart
+all: install build dist restart
 restart:
 	docker compose -f /opt/grafana/docker-compose.yml down && \
 	docker compose -f /opt/grafana/docker-compose.yml up -d
