@@ -296,22 +296,11 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         width: 130, // Slightly wider to accommodate all buttons
         sortable: false,
         filterable: false,
-        Cell: (
-          <ActionButtons
-            original={this.original}
-            rootWidth={this.rootWidth}
-            timeRange={this.props.timeRange}
-            panelId={this.props.panelId}
-            data={this.props.problems}
-            getProblemEvents={this.props.getProblemEvents}
-            getProblemAlerts={this.props.getProblemAlerts}
-            getScripts={this.props.getScripts}
-            onProblemAck={this.handleProblemAck}
-            onExecuteScript={this.props.onExecuteScript}
-            onTagClick={this.handleTagClick}
-            subRows={false}
-          />
-        ),
+        Cell: (props) => {
+          const original = props.original;
+
+          return <ActionButtons original={original} />;
+        },
       },
       {
         Header: '',
