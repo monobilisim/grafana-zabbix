@@ -19,6 +19,7 @@ import { reportInteraction, getDataSourceSrv } from '@grafana/runtime';
 import { EmailModal } from './EmailModal';
 const allProblems = React.createContext(null);
 const currentProblem = React.createContext(null);
+import { TicketModal } from './UpdateTicketModal';
 
 const getStyles = stylesFactory(() => {
   return {
@@ -146,7 +147,9 @@ const scriptIDS = {
 const parseEmails = (scriptString: string) => {
   // Extract just the emails object by finding the boundaries
   const emailsStart = scriptString.indexOf('var emails = {');
-  if (emailsStart === -1) return [];
+  if (emailsStart === -1) {
+    return [];
+  }
 
   // Find the end of the emails object, which is the first "};" after emailsStart
   const emailsEnd = scriptString.indexOf('}', emailsStart) + 1;
@@ -168,6 +171,9 @@ function ActionButtons(props: { original: ProblemDTO }) {
   const [currentProblem, setCurrentProblem] = useState(null);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [ticketId, setTicketId] = useState('');
+  const [currentProblemForTicket, setCurrentProblemForTicket] = useState(null);
 
   // scripts.forEach((script: object) => {
   //   if (script.name === 'Create Ticket') {
@@ -189,7 +195,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
       setLoading(true);
 
       const ds: any = await getDataSourceSrv().get(problem.datasource);
-      const scripts: ZabbixScript[] = await ds.zabbix.getScripts();
+      const scripts: ZBXScript[] = await ds.zabbix.getScripts();
 
       // Find the "Send Email" script
       const emailScript = scripts.find((script) => script.name === 'Send Email');
@@ -217,6 +223,14 @@ function ActionButtons(props: { original: ProblemDTO }) {
     });
   };
 
+  const handleTicketUpdate = async () => {
+    const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
+
+    return ds.zabbix.executeScript(scriptIDS.updateTicketId, undefined, currentProblem.eventid, {
+      manualinput: manualInput,
+    });
+  };
+
   const handleAction = (actionType: string, e: { stopPropagation: () => void }) => {
     e.stopPropagation();
 
@@ -231,7 +245,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
         onExecuteScript(problem, scriptIDS.createTicket);
         break;
       case 'updateTicketId':
-        onExecuteScript(problem, scriptIDS.updateTicketId);
+        setIsTicketModalOpen(true);
         break;
     }
   };
@@ -269,6 +283,16 @@ function ActionButtons(props: { original: ProblemDTO }) {
         manualInput={manualInput}
         setManualInput={setManualInput}
         companies={companies}
+      />
+
+      <TicketModal
+        isOpen={isTicketModalOpen}
+        problem={currentProblemForTicket}
+        onDismiss={() => setIsTicketModalOpen(false)}
+        onSubmit={handleTicketUpdate}
+        title="Update Ticket ID"
+        setManualInput={setTicketId}
+        manualInput={ticketId}
       />
     </>
   );
