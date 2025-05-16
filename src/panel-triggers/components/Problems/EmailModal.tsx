@@ -64,7 +64,7 @@ export const EmailModal: FC<EmailModalProps> = ({
     <Modal title={title} isOpen={isOpen} onDismiss={onDismiss}>
       <div className={styles.container}>
         <div className={styles.formRow}>
-          <select value={manualInput} onChange={(e: any) => change(e)}>
+          <select className={styles.select} value={manualInput} onChange={(e: any) => change(e)}>
             {companies.map((company: string) => (
               <option key={company} value={company}>
                 {company || ''}
@@ -113,5 +113,8 @@ const getStyles = (theme: GrafanaTheme2) => ({
     justify-content: flex-end;
     gap: ${theme.spacing(1)};
     margin-top: ${theme.spacing(3)};
+  `,
+  select: css`
+    height: 16px;
   `,
 });

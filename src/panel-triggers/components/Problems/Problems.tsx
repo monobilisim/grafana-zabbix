@@ -145,7 +145,7 @@ const scriptIDS = {
 
 const parseCompanies = (scriptString: string) => {
   // Extract the companies object declaration
-  const companiesMatch = scriptString.match(/var companies = \{[\s\S]*?\};/);
+  const companiesMatch = scriptString.match(/var emails = \{[\s\S]*?\};/);
 
   if (!companiesMatch) return [];
 
