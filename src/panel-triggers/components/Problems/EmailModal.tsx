@@ -33,7 +33,7 @@ export const EmailModal: FC<EmailModalProps> = ({
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setManualInput('');
+      setManualInput(companies[0]);
       setError(null);
     }
   }, [isOpen]);
