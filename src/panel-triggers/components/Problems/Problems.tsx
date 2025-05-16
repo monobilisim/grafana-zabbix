@@ -1,10 +1,10 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, useState } from 'react';
 import { css, cx } from '@emotion/css';
 import ReactTable from 'react-table-6';
 import _ from 'lodash';
 // eslint-disable-next-line
 import moment from 'moment';
-import { stylesFactory } from '@grafana/ui';
+import { stylesFactory, Button } from '@grafana/ui';
 import { isNewProblem } from '../../utils';
 import { EventTag } from '../EventTag';
 import { ProblemDetails } from './ProblemDetails';
@@ -16,6 +16,7 @@ import { APIExecuteScriptResponse, ZBXScript } from '../../../datasource/zabbix/
 import { AckCell } from './AckCell';
 import { DataSourceRef, TimeRange } from '@grafana/data';
 import { reportInteraction, getDataSourceSrv } from '@grafana/runtime';
+import { EmailModal } from './EmailModal';
 const allProblems = React.createContext(null);
 const currentProblem = React.createContext(null);
 
@@ -124,155 +125,87 @@ const getStyles = stylesFactory(() => {
   };
 });
 
-const onExecuteScript = async (problem: ProblemDTO, scriptid: string, input?: any): Promise<APIExecuteScriptResponse> => {
-  const hostid = problem.hosts?.length ? problem.hosts[0].hostid : null;
+const onExecuteScript = async (
+  problem: ProblemDTO,
+  scriptid: string,
+  input?: any
+): Promise<APIExecuteScriptResponse> => {
   const eventid = problem.eventid && problem.eventid.trim() !== '' ? problem.eventid : undefined;
   const ds: any = await getDataSourceSrv().get(problem.datasource);
 
-  const scriptsResponse = await ds.zabbix.getScripts(hostid ? [hostid] : undefined);
-  const targetScript = scriptsResponse.find((script: { scriptid: string; }) => script.scriptid === scriptid);
-
-  if (!targetScript) {
-    throw new Error(`Script with ID ${scriptid} not found`);
-  }
-
-  switch (targetScript.scope) {
-    case '4': // Event action
-      if (!eventid) {
-        throw new Error('EventID required for this script');
-      }
-      return ds.zabbix.executeScript(scriptid, input, eventid);
-    default:
-      throw new Error(`Unsupported script scope: ${targetScript.scope}`);
-  }
+  return ds.zabbix.executeScript(scriptid, input, eventid);
 };
 
-function ActionButtons(props: { original: ProblemDTO; }) {
+const scriptIDS = {
+  sendEmail: '8',
+  closeTicket: '7',
+  createTicket: '4',
+  updateTicketId: '6',
+};
+
+function ActionButtons(props: { original: ProblemDTO }) {
   const styles = getStyles();
   const problem: ProblemDTO = props.original;
-  const [showModal, setShowModal] = React.useState(false);
-  const [selectedValue, setSelectedValue] = React.useState('');
-  const [recipient, setRecipient] = React.useState('');
-  const [subject, setSubject] = React.useState('');
-  const [message, setMessage] = React.useState('');
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [currentProblem, setCurrentProblem] = useState(null);
 
-  const handleAction = (actionType: string, e: { stopPropagation: () => void; }) => {
+  const sendEmail = async (recipient: string) => {
+    const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
+    return ds.zabbix.executeScript(scriptIDS.sendEmail, null, currentProblem.eventid);
+  };
+
+  const handleAction = (actionType: string, e: { stopPropagation: () => void }) => {
     e.stopPropagation();
 
     switch (actionType) {
       case 'sendEmail':
-        setShowModal(true);
-        setSubject(`Problem: ${problem.name}`);
-        setMessage(`Problem details:\n${problem.name}\nHost: ${problem.host}`);
+        setCurrentProblem(problem);
+        setShowEmailModal(true);
         break;
       case 'closeTicket':
-        onExecuteScript(problem, '7');
+        onExecuteScript(problem, scriptIDS.closeTicket);
         break;
       case 'createTicket':
-        onExecuteScript(problem, '4');
+        onExecuteScript(problem, scriptIDS.createTicket);
         break;
       case 'updateTicketId':
-        onExecuteScript(problem, '6');
+        onExecuteScript(problem, scriptIDS.updateTicketId);
         break;
     }
   };
 
-  const handleSelectChange = (e) => {
-    setSelectedValue(e.target.value);
-  };
-
-  const handleRecipientChange = (e) => {
-    setRecipient(e.target.value);
-  };
-
-  const handleSubjectChange = (e) => {
-    setSubject(e.target.value);
-  };
-
-  const handleMessageChange = (e) => {
-    setMessage(e.target.value);
-  };
-
-  const handleSend = () => {
-    onExecuteScript(problem, '8', { 
-      manuelinput: selectedValue,
-      recipient: recipient,
-      subject: subject,
-      message: message
-    });
-    closeModal();
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setSelectedValue('');
-    setRecipient('');
-    setSubject('');
-    setMessage('');
-  };
-
   return (
-    <div className={styles.actionButtons}>
-      <i
-        className={cx('fa fa-check-square-o', styles.actionIcon)}
-        onClick={(e: any) => handleAction('closeTicket', e)}
-        title="Close ticket"
-      ></i>
-      <i
-        className={cx('fa fa-plus-square', styles.actionIcon)}
-        onClick={(e: any) => handleAction('createTicket', e)}
-        title="Create ticket"
-      ></i>
-      <i
-        className={cx('fa fa-envelope-o', styles.actionIcon)}
-        onClick={(e: any) => handleAction('sendEmail', e)}
-        title="Send email"
-      ></i>
-      <i
-        className={cx('fa fa-pencil-square-o', styles.actionIcon)}
-        onClick={(e: any) => handleAction('updateTicketId', e)}
-        title="Update ticket ID"
-      ></i>
+    <>
+      <div className={styles.actionButtons}>
+        <i
+          className={cx('fa fa-check-square-o', styles.actionIcon)}
+          onClick={(e: any) => handleAction('closeTicket', e)}
+          title="Close ticket"
+        ></i>
+        <i
+          className={cx('fa fa-plus-square', styles.actionIcon)}
+          onClick={(e: any) => handleAction('createTicket', e)}
+          title="Create ticket"
+        ></i>
+        <i
+          className={cx('fa fa-envelope-o', styles.actionIcon)}
+          onClick={(e: any) => handleAction('sendEmail', e)}
+          title="Send email"
+        ></i>
+        <i
+          className={cx('fa fa-pencil-square-o', styles.actionIcon)}
+          onClick={(e: any) => handleAction('updateTicketId', e)}
+          title="Update ticket ID"
+        ></i>
+      </div>
 
-      {showModal && (
-        <div className={styles.modalOverlay} onClick={closeModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <span>Send Email</span>
-              <span className={styles.modalClose} onClick={closeModal}>&times;</span>
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Template</label>
-              <select 
-                className={styles.formSelect} 
-                name="manualinput"
-                value={selectedValue} 
-                onChange={handleSelectChange}
-              >
-                <option value="">Select template</option>
-                <option value="TEST">TEST</option>
-              </select>
-            </div>
-            
-            <div className={styles.buttonGroup}>
-              <button 
-                className={cx(styles.formButton, styles.cancelButton)} 
-                onClick={closeModal}
-              >
-                Cancel
-              </button>
-              <button 
-                className={styles.formButton} 
-                onClick={handleSend}
-              >
-                Send
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <EmailModal
+        isOpen={showEmailModal}
+        problem={currentProblem}
+        onDismiss={() => setShowEmailModal(false)}
+        onSubmit={sendEmail}
+      />
+    </>
   );
 }
 
@@ -398,10 +331,10 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     const highlightNewerThan = options.highlightNewEvents && options.highlightNewerThan;
     const statusCell = (props: RTCell<ProblemDTO>) => StatusCell(props, highlightNewerThan);
     const statusIconCell = (props: RTCell<ProblemDTO>) => StatusIconCell(props, highlightNewerThan);
-    const hostNameCell = (props: { original: { host: any; hostInMaintenance: any; }; }) => (
+    const hostNameCell = (props: { original: { host: any; hostInMaintenance: any } }) => (
       <HostCell name={props.original.host} maintenance={props.original.hostInMaintenance} />
     );
-    const hostTechNameCell = (props: { original: { hostTechName: any; hostInMaintenance: any; }; }) => (
+    const hostTechNameCell = (props: { original: { hostTechName: any; hostInMaintenance: any } }) => (
       <HostCell name={props.original.hostTechName} maintenance={props.original.hostInMaintenance} />
     );
 
@@ -415,7 +348,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         show: options.severityField,
         className: 'problem-severity',
         width: 120,
-        accessor: (problem: { priority: any; }) => problem.priority,
+        accessor: (problem: { priority: any }) => problem.priority,
         id: 'severity',
         Cell: (props: RTCell<ProblemDTO>) =>
           SeverityCell(
@@ -467,7 +400,8 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         width: 150,
         accessor: 'timestamp',
         id: 'lastchange',
-        Cell: (props: RTCell<ProblemDTO>) => LastChangeCell(props, options.customLastChangeFormat && options.lastChangeFormat),
+        Cell: (props: RTCell<ProblemDTO>) =>
+          LastChangeCell(props, options.customLastChangeFormat && options.lastChangeFormat),
       },
       {
         Header: 'Actions',
@@ -477,7 +411,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         width: 130, // Slightly wider to accommodate all buttons
         sortable: false,
         filterable: false,
-        Cell: (props: { original: any; }) => {
+        Cell: (props: { original: any }) => {
           const original = props.original;
 
           return <ActionButtons original={original} />;
@@ -587,9 +521,9 @@ function SeverityCell(
 
   let severityDesc: TriggerSeverity;
   const severity = Number(problem.severity);
-  severityDesc = _.find(problemSeverityDesc, (s: { priority: number; }) => s.priority === severity);
+  severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
   if (problem.severity && problem.value === '1') {
-    severityDesc = _.find(problemSeverityDesc, (s: { priority: number; }) => s.priority === severity);
+    severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
   }
 
   color = problem.value === '0' ? okColor : severityDesc.color;
@@ -641,7 +575,7 @@ function StatusIconCell(props: RTCell<ProblemDTO>, highlightNewerThan?: string) 
 function GroupCell(props: RTCell<ProblemDTO>) {
   let groups = '';
   if (props.value && props.value.length) {
-    groups = props.value.map((g: { name: any; }) => g.name).join(', ');
+    groups = props.value.map((g: { name: any }) => g.name).join(', ');
   }
   return <span>{groups}</span>;
 }
