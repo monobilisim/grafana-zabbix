@@ -10,7 +10,7 @@ interface EmailModalProps {
   onDismiss: () => void;
   onSubmit: (recipient: string) => Promise<void>;
   title?: string;
-  setManualInput: any;
+  setManualInput: React.Dispatch<React.SetStateAction<string>>;
   manualInput: string;
 }
 
@@ -34,11 +34,11 @@ export const TicketModal: FC<EmailModalProps> = ({
       setManualInput('');
       setError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, setManualInput]);
 
   const handleSubmit = async () => {
-    if (!manualInput) {
-      setError('Recipient email is required');
+    if (!manualInput || manualInput.trim() === '') {
+      setError('ID is required');
       return;
     }
 
@@ -48,22 +48,25 @@ export const TicketModal: FC<EmailModalProps> = ({
       await onSubmit(manualInput);
       onDismiss();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send email');
+      setError(err instanceof Error ? err.message : 'Failed');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  function change(e) {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    setManualInput(value);
-  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Make sure we're getting a proper event with target
+    if (e && e.target) {
+      const value = e.target.value.replace(/[^0-9]/g, '');
+      setManualInput(value);
+    }
+  };
 
   return (
     <Modal title={title} isOpen={isOpen} onDismiss={onDismiss}>
       <div className={styles.container}>
         <div className={styles.formRow}>
-          <ZabbixInput value={manualInput} onChange={(e) => change(e)} width={30} />
+          <ZabbixInput value={manualInput} onChange={handleChange} width={30} placeholder="Enter Ticket ID" />
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
@@ -72,7 +75,7 @@ export const TicketModal: FC<EmailModalProps> = ({
           <Button variant="secondary" onClick={onDismiss}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
+          <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting || !manualInput}>
             {isSubmitting ? 'Sending...' : 'Send'}
           </Button>
         </div>
