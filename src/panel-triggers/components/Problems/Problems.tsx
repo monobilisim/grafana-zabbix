@@ -133,7 +133,7 @@ const onExecuteScript = async (
   const eventid = problem.eventid && problem.eventid.trim() !== '' ? problem.eventid : undefined;
   const ds: any = await getDataSourceSrv().get(problem.datasource);
 
-  return ds.zabbix.executeScript(scriptid, input, eventid);
+  return ds.zabbix.executeScript(scriptid, eventid);
 };
 
 const scriptIDS = {
