@@ -144,25 +144,20 @@ const scriptIDS = {
 };
 
 const parseEmails = (scriptString: string) => {
-  // Extract the emails object declaration
-  const emailsMatch = scriptString.match(/var emails = \{([\s\S]*?)\};/);
+  // Extract just the emails object by finding the boundaries
+  const emailsStart = scriptString.indexOf('var emails = {');
+  if (emailsStart === -1) return [];
 
-  if (!emailsMatch || !emailsMatch[1]) return [];
+  // Find the end of the emails object, which is the first "};" after emailsStart
+  const emailsEnd = scriptString.indexOf('}', emailsStart) + 1;
 
-  // We now have just the content inside the emails object brackets
-  const emailsContent = emailsMatch[1];
+  // Extract only the emails object as a substring
+  const emailsObjectText = scriptString.substring(emailsStart, emailsEnd);
 
-  // Extract all key-value pairs from just the emails content
-  const emailRegex = /"([^"]+)":\s*"([^"]+)"/g;
-  const emails = [];
-  let match;
+  // Use regex to find all the keys in the emails object
+  const emailKeys = emailsObjectText.match(/"([^"]+)":/g).map((key) => key.slice(1, -2));
 
-  while ((match = emailRegex.exec(emailsContent)) !== null) {
-    const emailName = match[1];
-    emails.push(emailName);
-  }
-
-  return emails; // Returns ["TEST", ...] - only from emails object
+  return emailKeys;
 };
 
 function ActionButtons(props: { original: ProblemDTO }) {
