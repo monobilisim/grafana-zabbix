@@ -138,10 +138,10 @@ const onExecuteScript = async (
 };
 
 const scriptIDS = {
-  sendEmail: '8',
-  closeTicket: '7',
-  createTicket: '4',
-  updateTicketId: '6',
+  sendEmail: '10',
+  closeTicket: '9',
+  createTicket: '7',
+  updateTicketId: '8',
 };
 
 const parseEmails = (scriptString: string) => {
