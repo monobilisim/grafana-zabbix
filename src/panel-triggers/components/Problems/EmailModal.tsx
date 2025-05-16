@@ -11,6 +11,7 @@ interface EmailModalProps {
   onSubmit: (recipient: string) => Promise<void>;
   title?: string;
   setManualInput: any;
+  manualInput: string;
 }
 
 export const EmailModal: FC<EmailModalProps> = ({
@@ -20,8 +21,8 @@ export const EmailModal: FC<EmailModalProps> = ({
   onSubmit,
   title = 'Send Email',
   setManualInput,
+  manualInput,
 }) => {
-  const [recipient, setRecipient] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,13 +31,13 @@ export const EmailModal: FC<EmailModalProps> = ({
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setRecipient('');
+      setManualInput('');
       setError(null);
     }
   }, [isOpen]);
 
   const handleSubmit = async () => {
-    if (!recipient) {
+    if (!manualInput) {
       setError('Recipient email is required');
       return;
     }
@@ -44,7 +45,7 @@ export const EmailModal: FC<EmailModalProps> = ({
     try {
       setIsSubmitting(true);
       setError(null);
-      await onSubmit(recipient);
+      await onSubmit(manualInput);
       onDismiss();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send email');
@@ -54,8 +55,7 @@ export const EmailModal: FC<EmailModalProps> = ({
   };
 
   function change(e) {
-    setRecipient(e.target.value);
-    setManualInput(recipient);
+    setManualInput(e.target.value);
   }
 
   return (
@@ -63,7 +63,7 @@ export const EmailModal: FC<EmailModalProps> = ({
       <div className={styles.container}>
         <div className={styles.formRow}>
           <div className={styles.label}>Recipient:</div>
-          <ZabbixInput value={recipient} onChange={(e: any) => change(e)} width={30} />
+          <ZabbixInput value={manualInput} onChange={(e: any) => change(e)} width={30} />
         </div>
 
         {error && <div className={styles.error}>{error}</div>}

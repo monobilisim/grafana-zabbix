@@ -207,6 +207,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
         problem={currentProblem}
         onDismiss={() => setShowEmailModal(false)}
         onSubmit={sendEmail}
+        manualInput={manualInput}
         setManualInput={setManualInput}
       />
     </>
