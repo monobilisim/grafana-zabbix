@@ -143,25 +143,25 @@ const scriptIDS = {
   updateTicketId: '6',
 };
 
-const parseCompanies = (scriptString: string) => {
-  // Extract the companies object declaration
-  const companiesMatch = scriptString.match(/var emails = \{[\s\S]*?\};/);
+const parseEmails = (scriptString: string) => {
+  // Extract the emails object declaration
+  const emailsMatch = scriptString.match(/var emails = \{[\s\S]*?\};/);
 
-  if (!companiesMatch) return [];
+  if (!emailsMatch) return [];
 
-  const companiesString = companiesMatch[0];
+  const emailsString = emailsMatch[0];
 
   // Extract all key-value pairs
-  const companyRegex = /"([^"]+)":\s*"([^"]+)"/g;
-  const companies = [];
+  const emailRegex = /"([^"]+)":\s*"([^"]+)"/g;
+  const emails = [];
   let match;
 
-  while ((match = companyRegex.exec(companiesString)) !== null) {
-    const companyName = match[1]; // This captures just "MEDISA"
-    companies.push(companyName); // Add just the name as a string
+  while ((match = emailRegex.exec(emailsString)) !== null) {
+    const emailName = match[1];
+    emails.push(emailName);
   }
 
-  return companies; // Returns ["MEDISA", "KALE HOLDING", ...]
+  return emails; // Returns ["TEST", ...] - only from emails object
 };
 
 function ActionButtons(props: { original: ProblemDTO }) {
@@ -199,7 +199,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
       const emailScript = scripts.find((script) => script.name === 'Send Email');
 
       if (emailScript?.command) {
-        const parsedCompanies = parseCompanies(emailScript.command);
+        const parsedCompanies = parseEmails(emailScript.command);
         setCompanies(parsedCompanies);
       }
 

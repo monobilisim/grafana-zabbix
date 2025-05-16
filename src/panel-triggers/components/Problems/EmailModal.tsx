@@ -113,6 +113,6 @@ const getStyles = (theme: GrafanaTheme2) => ({
     margin-top: ${theme.spacing(3)};
   `,
   select: css`
-    height: 16px;
+    height: 24px;
   `,
 });
