@@ -143,16 +143,52 @@ const scriptIDS = {
   updateTicketId: '6',
 };
 
+const parseCompanies = (scriptString: string) => {
+  // Extract the companies object declaration
+  const companiesMatch = scriptString.match(/var companies = \{[\s\S]*?\};/);
+
+  if (!companiesMatch) return [];
+
+  const companiesString = companiesMatch[0];
+
+  // Extract all key-value pairs
+  const companyRegex = /"([^"]+)":\s*"([^"]+)"/g;
+  const companies = [];
+  let match;
+
+  while ((match = companyRegex.exec(companiesString)) !== null) {
+    const companyName = match[1]; // This captures just "MEDISA"
+    companies.push(companyName); // Add just the name as a string
+  }
+
+  return companies; // Returns ["MEDISA", "KALE HOLDING", ...]
+};
+
 function ActionButtons(props: { original: ProblemDTO }) {
   const [manualInput, setManualInput] = useState('');
   const styles = getStyles();
   const problem: ProblemDTO = props.original;
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [currentProblem, setCurrentProblem] = useState(null);
+  const [companies, setCompanies] = useState([]);
+
+  // scripts.forEach((script: object) => {
+  //   if (script.name === 'Create Ticket') {
+  //     scriptIDS.createTicket = script.scriptid;
+  //   }
+  //   if (script.name === 'Close Ticket') {
+  //     scriptIDS.closeTicket = script.scriptid;
+  //   }
+  //   if (script.name === 'Send Email') {
+  //     scriptIDS.sendEmail = script.scriptid;
+  //   }
+  //   if (script.name === 'Update Ticket ID') {
+  //     scriptIDS.updateTicketId = script.scriptid;
+  //   }
+  // });
 
   const sendEmail = async (recipient: string) => {
     const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
-    console.log('scripts: ', ds.zabbix.getScripts());
 
     return ds.zabbix.executeScript(scriptIDS.sendEmail, undefined, currentProblem.eventid, {
       manualinput: manualInput,
@@ -164,6 +200,17 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
     switch (actionType) {
       case 'sendEmail':
+        (async () => {
+          const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
+          const scripts: object[] = await ds.zabbix.getScripts();
+
+          scripts.forEach((script: object) => {
+            if (script.name === 'Send Email') {
+              setCompanies(parseCompanies(script.command));
+            }
+          });
+        })();
+
         setCurrentProblem(problem);
         setShowEmailModal(true);
         break;
@@ -211,6 +258,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
         onSubmit={sendEmail}
         manualInput={manualInput}
         setManualInput={setManualInput}
+        companies={companies}
       />
     </>
   );

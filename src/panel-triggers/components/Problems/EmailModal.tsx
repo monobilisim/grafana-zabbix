@@ -12,6 +12,7 @@ interface EmailModalProps {
   title?: string;
   setManualInput: any;
   manualInput: string;
+  companies: string[];
 }
 
 export const EmailModal: FC<EmailModalProps> = ({
@@ -22,6 +23,7 @@ export const EmailModal: FC<EmailModalProps> = ({
   title = 'Send Email',
   setManualInput,
   manualInput,
+  companies,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,8 +64,15 @@ export const EmailModal: FC<EmailModalProps> = ({
     <Modal title={title} isOpen={isOpen} onDismiss={onDismiss}>
       <div className={styles.container}>
         <div className={styles.formRow}>
-          <div className={styles.label}>Recipient:</div>
-          <ZabbixInput value={manualInput} onChange={(e: any) => change(e)} width={30} />
+          <select value={manualInput} onChange={(e: any) => change(e)}>
+            {companies.map((company: string) => (
+              <option key={company} value={company}>
+                {company || ''}
+              </option>
+            ))}
+          </select>
+
+          {/* <ZabbixInput value={manualInput} onChange={(e: any) => change(e)} width={30} /> */}
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
