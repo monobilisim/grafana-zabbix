@@ -71,8 +71,6 @@ export const EmailModal: FC<EmailModalProps> = ({
               </option>
             ))}
           </select>
-
-          {/* <ZabbixInput value={manualInput} onChange={(e: any) => change(e)} width={30} /> */}
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
