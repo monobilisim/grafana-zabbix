@@ -171,6 +171,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [currentProblem, setCurrentProblem] = useState(null);
   const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // scripts.forEach((script: object) => {
   //   if (script.name === 'Create Ticket') {
@@ -187,6 +188,31 @@ function ActionButtons(props: { original: ProblemDTO }) {
   //   }
   // });
 
+  const fetchScriptsAndSetCompanies = async (problem: any) => {
+    try {
+      setLoading(true);
+
+      const ds: any = await getDataSourceSrv().get(problem.datasource);
+      const scripts: ZabbixScript[] = await ds.zabbix.getScripts();
+
+      // Find the "Send Email" script
+      const emailScript = scripts.find((script) => script.name === 'Send Email');
+
+      if (emailScript?.command) {
+        const parsedCompanies = parseCompanies(emailScript.command);
+        setCompanies(parsedCompanies);
+      }
+
+      setCurrentProblem(problem);
+      setShowEmailModal(true);
+    } catch (error) {
+      console.error('Error fetching scripts:', error);
+      // Handle errors (show error message to user)
+    } finally {
+      setLoading(false); // Clear loading state
+    }
+  };
+
   const sendEmail = async (recipient: string) => {
     const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
 
@@ -200,19 +226,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
     switch (actionType) {
       case 'sendEmail':
-        (async () => {
-          const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
-          const scripts: object[] = await ds.zabbix.getScripts();
-
-          scripts.forEach((script: object) => {
-            if (script.name === 'Send Email') {
-              setCompanies(parseCompanies(script.command));
-            }
-          });
-        })();
-
-        setCurrentProblem(problem);
-        setShowEmailModal(true);
+        fetchScriptsAndSetCompanies(problem);
         break;
       case 'closeTicket':
         onExecuteScript(problem, scriptIDS.closeTicket);
