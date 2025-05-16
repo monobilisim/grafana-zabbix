@@ -2,7 +2,6 @@ import React, { FC, useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import { Modal, Button, useStyles2 } from '@grafana/ui';
 import { GrafanaTheme2 } from '@grafana/data';
-import { ZabbixInput } from '../../../datasource/components/ZabbixInput';
 
 interface EmailModalProps {
   isOpen: boolean;

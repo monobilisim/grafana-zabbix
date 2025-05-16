@@ -145,18 +145,19 @@ const scriptIDS = {
 
 const parseEmails = (scriptString: string) => {
   // Extract the emails object declaration
-  const emailsMatch = scriptString.match(/var emails = \{[\s\S]*?\};/);
+  const emailsMatch = scriptString.match(/var emails = \{([\s\S]*?)\};/);
 
-  if (!emailsMatch) return [];
+  if (!emailsMatch || !emailsMatch[1]) return [];
 
-  const emailsString = emailsMatch[0];
+  // We now have just the content inside the emails object brackets
+  const emailsContent = emailsMatch[1];
 
-  // Extract all key-value pairs
+  // Extract all key-value pairs from just the emails content
   const emailRegex = /"([^"]+)":\s*"([^"]+)"/g;
   const emails = [];
   let match;
 
-  while ((match = emailRegex.exec(emailsString)) !== null) {
+  while ((match = emailRegex.exec(emailsContent)) !== null) {
     const emailName = match[1];
     emails.push(emailName);
   }
