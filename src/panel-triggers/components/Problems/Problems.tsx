@@ -133,7 +133,7 @@ const onExecuteScript = async (
   const eventid = problem.eventid && problem.eventid.trim() !== '' ? problem.eventid : undefined;
   const ds: any = await getDataSourceSrv().get(problem.datasource);
 
-  return ds.zabbix.executeScript(scriptid, eventid);
+  return ds.zabbix.executeScript(scriptid, input, eventid);
 };
 
 const scriptIDS = {
@@ -144,6 +144,7 @@ const scriptIDS = {
 };
 
 function ActionButtons(props: { original: ProblemDTO }) {
+  const [manualInput, setManualInput] = useState('');
   const styles = getStyles();
   const problem: ProblemDTO = props.original;
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -204,6 +205,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
         problem={currentProblem}
         onDismiss={() => setShowEmailModal(false)}
         onSubmit={sendEmail}
+        setManualInput={setManualInput}
       />
     </>
   );

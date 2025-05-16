@@ -10,9 +10,17 @@ interface EmailModalProps {
   onDismiss: () => void;
   onSubmit: (recipient: string) => Promise<void>;
   title?: string;
+  setManualInput: function;
 }
 
-export const EmailModal: FC<EmailModalProps> = ({ isOpen, problem, onDismiss, onSubmit, title = 'Send Email' }) => {
+export const EmailModal: FC<EmailModalProps> = ({
+  isOpen,
+  problem,
+  onDismiss,
+  onSubmit,
+  title = 'Send Email',
+  setManualInput,
+}) => {
   const [recipient, setRecipient] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,12 +53,17 @@ export const EmailModal: FC<EmailModalProps> = ({ isOpen, problem, onDismiss, on
     }
   };
 
+  function change(e) {
+    setRecipient(e.target.value);
+    setManualInput(recipient);
+  }
+
   return (
     <Modal title={title} isOpen={isOpen} onDismiss={onDismiss}>
       <div className={styles.container}>
         <div className={styles.formRow}>
           <div className={styles.label}>Recipient:</div>
-          <ZabbixInput value={recipient} onChange={(e: any) => setRecipient(e.target.value)} width={30} />
+          <ZabbixInput value={recipient} onChange={(e: any) => change(e)} width={30} />
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
