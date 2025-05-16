@@ -50,7 +50,7 @@ export const EmailModal: FC<EmailModalProps> = ({ isOpen, problem, onDismiss, on
       <div className={styles.container}>
         <div className={styles.formRow}>
           <div className={styles.label}>Recipient:</div>
-          <ZabbixInput value="TEST" onChange={(e: any) => setRecipient(e.target.value)} width={30} />
+          <ZabbixInput value={recipient} onChange={(e: any) => setRecipient(e.target.value)} width={30} />
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
