@@ -10,7 +10,7 @@ interface EmailModalProps {
   onDismiss: () => void;
   onSubmit: (recipient: string) => Promise<void>;
   title?: string;
-  setManualInput: function;
+  setManualInput: any;
 }
 
 export const EmailModal: FC<EmailModalProps> = ({
