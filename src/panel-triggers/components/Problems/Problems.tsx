@@ -151,7 +151,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
   const sendEmail = async (recipient: string) => {
     const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
-    return ds.zabbix.executeScript(scriptIDS.sendEmail, null, currentProblem.eventid);
+    return ds.zabbix.executeScript(scriptIDS.sendEmail, { manualinput: recipient }, currentProblem.eventid);
   };
 
   const handleAction = (actionType: string, e: { stopPropagation: () => void }) => {
