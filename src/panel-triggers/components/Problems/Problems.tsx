@@ -564,8 +564,10 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       getAppEvents().emit('alert-warning', ['Severity değerleri tanımlanmamış', `Severity değerleri tanımlanmamış`]);
     }
 
-    if (severityObject.current.value === '$_all') {
-      problemsToRender = this.props.problems;
+    if (severityObject) {
+      if (severityObject.current.value === '$_all') {
+        problemsToRender = this.props.problems;
+      }
     }
 
     return (
