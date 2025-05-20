@@ -66,7 +66,7 @@ export const TicketModal: FC<EmailModalProps> = ({
     <Modal title={title} isOpen={isOpen} onDismiss={onDismiss}>
       <div className={styles.container}>
         <div className={styles.formRow}>
-          <ZabbixInput value={manualInput} onChange={handleChange} width={30} placeholder="Enter Ticket ID" />
+          <input type="text" value={manualInput} onChange={handleChange} width={30} placeholder="Enter Ticket ID" />
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
