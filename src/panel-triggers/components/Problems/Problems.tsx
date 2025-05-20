@@ -552,18 +552,16 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     const tmp = getTemplateSrv();
     const scopeVariables = tmp.getVariables();
     let selectedSeverityValues: string[] = [];
-
-    const severityObject = scopeVariables.find((variable) => variable.name === 'Severity');
-    selectedSeverityValues = severityObject.options.filter((option) => option.selected).map((option) => option.value);
-
     let problemsToRender = this.props.problems;
-    //const [problemsToRender, setProblemsToRender] = useState(this.props.problems);
-    console.log('problemsToRender:', problemsToRender);
-    let selectedProblems = problemsToRender.filter((problem) => selectedSeverityValues.includes(problem.severity));
-    console.log('selected:', selectedProblems);
-    problemsToRender = selectedProblems;
-    //setProblemsToRender(selectedProblems);
-    console.log('problemsToRenderAfter:', problemsToRender);
+    const severityObject = scopeVariables.find((variable) => variable.name === 'Severity');
+
+    if (severityObject) {
+      selectedSeverityValues = severityObject.options.filter((option) => option.selected).map((option) => option.value);
+
+      let selectedProblems = problemsToRender.filter((problem) => selectedSeverityValues.includes(problem.severity));
+      problemsToRender = selectedProblems;
+    }
+
     return (
       <div className={panelClass} ref={this.setRootRef}>
         <allProblems.Provider value={this.props.problems}>
