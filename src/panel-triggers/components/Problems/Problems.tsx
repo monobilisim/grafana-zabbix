@@ -567,7 +567,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     }
 
     if (severityObject) {
-      if (severityObject.current.value === '$__all') {
+      if (severityObject.current.value.includes('all')) {
         problemsToRender = this.props.problems;
       }
     }
