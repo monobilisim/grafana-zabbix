@@ -174,8 +174,6 @@ function ActionButtons(props: { original: ProblemDTO }) {
     updateTicketId: 'Update Ticket ID isimli bir script bulunamadı',
   });
 
-  const [scriptIDDoesNotMatchWithScriptName, setScriptIDDoesNotMatchWithScriptName] = [];
-
   useEffect(() => {
     const fetchScripts = async () => {
       try {
@@ -247,13 +245,12 @@ function ActionButtons(props: { original: ProblemDTO }) {
       setShowEmailModal(true);
     } catch (error) {
       console.error('Error fetching scripts:', error);
-      // Handle errors (show error message to user)
     } finally {
-      setLoading(false); // Clear loading state
+      setLoading(false);
     }
   };
 
-  const sendEmail = async (recipient: string) => {
+  const sendEmail = async () => {
     const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
 
     const scripts: ZBXScript[] = await ds.zabbix.getScripts();
@@ -278,7 +275,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
     scripts.forEach((script) => {
       if (script.scriptid === scriptIDS.updateTicketId) {
-        if (script.name === 'Send Email') {
+        if (script.name === 'Update Ticket ID') {
           return ds.zabbix.executeScript(scriptIDS.updateTicketId, undefined, currentProblem.eventid, {
             manualinput: manualInput,
           });
@@ -294,14 +291,20 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
     const scripts: ZBXScript[] = await ds.zabbix.getScripts();
 
+    let scriptFound = false;
+
     scripts.forEach((script) => {
       if (script.scriptid === scriptIDS.closeTicket) {
         if (script.name === 'Close Ticket') {
+          scriptFound = true;
           return onExecuteScript(problem, scriptIDS.closeTicket);
         }
       }
     });
-    return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Close Ticket adı ile uyuşmuyor']);
+
+    if (!scriptFound) {
+      return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Close Ticket adı ile uyuşmuyor']);
+    }
   }
 
   async function createTicket() {
@@ -309,14 +312,20 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
     const scripts: ZBXScript[] = await ds.zabbix.getScripts();
 
+    let scriptFound = false;
+
     scripts.forEach((script) => {
       if (script.scriptid === scriptIDS.createTicket) {
-        if (script.name === 'Close Ticket') {
+        if (script.name === 'Create Ticket') {
+          scriptFound = true;
           return onExecuteScript(problem, scriptIDS.createTicket);
         }
       }
     });
-    return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Close Ticket adı ile uyuşmuyor']);
+
+    if (!scriptFound) {
+      return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Create Ticket adı ile uyuşmuyor']);
+    }
   }
 
   const handleAction = (actionType: string, e: { stopPropagation: () => void }) => {
@@ -333,6 +342,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
         createTicket();
         break;
       case 'updateTicketId':
+        setCurrentProblemForTicket(problem);
         setIsTicketModalOpen(true);
         break;
     }
