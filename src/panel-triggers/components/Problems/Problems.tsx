@@ -174,8 +174,6 @@ function ActionButtons(props: { original: ProblemDTO }) {
     updateTicketId: '',
   });
 
-  console.log(problem);
-
   useEffect(() => {
     const fetchScripts = async () => {
       try {
@@ -387,6 +385,8 @@ function ActionButtons(props: { original: ProblemDTO }) {
 function TicketID(props: { original: ProblemDTO }) {
   const problem = props.original;
   const tags = problem.tags;
+  console.log(problem);
+  console.log(tags);
   const ticketId = tags.find((tag) => tag.tag === 'TicketId');
   return <div>{ticketId ? ticketId.toString() : ''}</div>;
 }
