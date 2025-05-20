@@ -15,7 +15,7 @@ import { ProblemDTO, ZBXAlert, ZBXEvent, ZBXTag } from '../../../datasource/type
 import { APIExecuteScriptResponse, ZBXScript } from '../../../datasource/zabbix/connectors/zabbix_api/types';
 import { AckCell } from './AckCell';
 import { DataSourceRef, TimeRange } from '@grafana/data';
-import { reportInteraction, getDataSourceSrv, getAppEvents } from '@grafana/runtime';
+import { reportInteraction, getDataSourceSrv, getAppEvents, getTemplateSrv } from '@grafana/runtime';
 import { EmailModal } from './EmailModal';
 const allProblems = React.createContext(null);
 const currentProblem = React.createContext(null);
@@ -69,6 +69,10 @@ function ActionButtons(props: { original: ProblemDTO }) {
     createTicket: '',
     updateTicketId: '',
   });
+
+  const tmp = getTemplateSrv();
+
+  console.log(tmp.getVariables());
 
   useEffect(() => {
     const fetchScripts = async () => {
