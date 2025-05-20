@@ -277,7 +277,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
     if (script) {
       getAppEvents().emit('alert-success', ['Success', 'Update Ticket ID çağırıldı']);
       return ds.zabbix.executeScript(scriptIDS.updateTicketId, undefined, currentProblem.eventid, {
-        manualinput: manualInput,
+        manualinput: ticketId,
       });
     } else {
       return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Update Ticket ID adı ile uyuşmuyor']);
