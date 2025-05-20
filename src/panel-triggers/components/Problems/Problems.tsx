@@ -388,7 +388,7 @@ function TicketID(props: { original: ProblemDTO }) {
   const problem = props.original;
   const tags = problem.tags;
   const ticketId = tags.find((tag) => tag.tag === 'TicketId');
-  return <div>{ticketId}</div>;
+  return <div>{ticketId ? ticketId.toString() : ''}</div>;
 }
 
 export interface ProblemListProps {
@@ -609,7 +609,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Cell: (props: { original: any }) => {
           const original = props.original;
 
-          return original ? <TicketID original={original} /> : <div></div>;
+          return <TicketID original={original} />;
         },
       },
       {
