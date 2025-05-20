@@ -560,6 +560,8 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
 
       let selectedProblems = problemsToRender.filter((problem) => selectedSeverityValues.includes(problem.severity));
       problemsToRender = selectedProblems;
+    } else {
+      getAppEvents().emit('alert-warning', ['Severity değerleri tanımlanmamış', `Severity değerleri tanımlanmamış`]);
     }
 
     return (
