@@ -8,15 +8,16 @@ import { GrafanaTheme } from '@grafana/data';
 // import { getBackendSrv } from '@grafana/runtime'; // Not used in this component
 
 const getStyles = stylesFactory((theme: GrafanaTheme) => {
+  // Using theme for colors, typography, borders, shadows, but hardcoding spacing
   return {
     countLabel: css`
       font-size: ${theme.typography.size.sm};
-      background: none; // Make button transparent
+      background: none;
       border: none;
       padding: 0;
-      margin-left: ${theme.spacing(0.5)}; // Add a little space after the icon
+      margin-left: 4px; // Replaced theme.spacing.xs
       cursor: pointer;
-      color: ${theme.colors.text}; // Use theme text color
+      color: ${theme.colors.text};
       &:hover {
         text-decoration: underline;
       }
@@ -27,32 +28,32 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
       background: ${theme.colors.bg2};
       border: 1px solid ${theme.colors.border2};
       border-radius: ${theme.border.radius.sm};
-      padding: ${theme.spacing.md}; // Increased padding for the modal itself
-      width: 350px; // Slightly wider
-      max-height: 400px; // Max height before scrolling
-      overflow-y: auto; // Enable vertical scroll
-      box-shadow: ${theme.shadows.lg}; // Add a bit of shadow for depth
+      padding: 16px; // Replaced theme.spacing.md
+      width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: ${theme.shadows.lg};
     `,
     ackItem: css`
-      margin-bottom: ${theme.spacing.md}; // Increased margin
-      padding-bottom: ${theme.spacing.md}; // Increased padding
+      margin-bottom: 16px; // Replaced theme.spacing.md
+      padding-bottom: 16px; // Replaced theme.spacing.md
       border-bottom: 1px solid ${theme.colors.border1};
       &:last-child {
         border-bottom: none;
         margin-bottom: 0;
-        padding-bottom: 0; // No padding at the very end
+        padding-bottom: 0;
       }
     `,
     ackHeader: css`
       display: flex;
-      justify-content: space-between; // Pushes time to the right
+      justify-content: space-between;
       align-items: baseline;
-      margin-bottom: ${theme.spacing.xs};
-      word-break: break-word; // Prevent overflow for long names
+      margin-bottom: 4px; // Replaced theme.spacing.xs
+      word-break: break-word;
     `,
     ackUser: css`
       font-weight: ${theme.typography.fontWeightBold};
-      margin-right: ${theme.spacing(1)}; // Space after user name
+      margin-right: 8px; // Replaced theme.spacing.sm
     `,
     ackTime: css`
       font-size: ${theme.typography.size.xs};
@@ -61,19 +62,19 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
     ackMessage: css`
       font-size: ${theme.typography.size.sm};
       color: ${theme.colors.text};
-      white-space: pre-wrap; // Preserve whitespace and wrap text
-      word-break: break-word; // Break long words
-      margin-top: ${theme.spacing.sm}; // Space above message if header is present
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-top: 8px; // Replaced theme.spacing.sm
     `,
     ackAction: css`
       font-size: ${theme.typography.size.sm};
       color: ${theme.colors.textSemiWeak};
-      margin-top: ${theme.spacing.xs};
+      margin-top: 4px; // Replaced theme.spacing.xs
       font-style: italic;
     `,
     clickableArea: css`
       cursor: pointer;
-      display: inline-flex; // To keep icon and button on the same line
+      display: inline-flex;
       align-items: center;
     `,
   };
