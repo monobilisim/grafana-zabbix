@@ -14,8 +14,8 @@ import { ProblemsPanelOptions, RTCell, RTResized, TriggerSeverity } from '../../
 import { ProblemDTO, ZBXAlert, ZBXEvent, ZBXTag } from '../../../datasource/types';
 import { APIExecuteScriptResponse, ZBXScript } from '../../../datasource/zabbix/connectors/zabbix_api/types';
 import { AckCell } from './AckCell';
-import { DataSourceRef, TimeRange } from '@grafana/data';
-import { reportInteraction, getDataSourceSrv, getAppEvents } from '@grafana/runtime';
+import { DataSourceRef, TimeRange, AppEvents } from '@grafana/data';
+import { reportInteraction, getDataSourceSrv, getAppEvents, getBackendSrv } from '@grafana/runtime';
 import { EmailModal } from './EmailModal';
 const allProblems = React.createContext(null);
 const currentProblem = React.createContext(null);
