@@ -70,10 +70,6 @@ function ActionButtons(props: { original: ProblemDTO }) {
     updateTicketId: '',
   });
 
-  const tmp = getTemplateSrv();
-
-  console.log(tmp.getVariables());
-
   useEffect(() => {
     const fetchScripts = async () => {
       try {
@@ -553,11 +549,26 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       pageSizeOptions = _.uniq(_.sortBy(pageSizeOptions));
     }
 
+    const tmp = getTemplateSrv();
+    const scopeVariables = tmp.getVariables();
+    let selectedSeverityValues: string[] = [];
+
+    const severityObject = scopeVariables.find((variable) => variable.name === 'Severity');
+    selectedSeverityValues = severityObject.options.filter((option) => option.selected).map((option) => option.value);
+
+    let problemsToRender = this.props.problems;
+    //const [problemsToRender, setProblemsToRender] = useState(this.props.problems);
+
+    let selectedProblems = problemsToRender.filter((problem) => selectedSeverityValues.includes(problem.severity));
+
+    problemsToRender = selectedProblems;
+    //setProblemsToRender(selectedProblems);
+
     return (
       <div className={panelClass} ref={this.setRootRef}>
         <allProblems.Provider value={this.props.problems}>
           <ReactTable
-            data={this.props.problems}
+            data={problemsToRender}
             columns={columns}
             defaultPageSize={10}
             pageSize={pageSize}
