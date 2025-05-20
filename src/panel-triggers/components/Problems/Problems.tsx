@@ -384,7 +384,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
 function TicketID(props: { original: ProblemDTO }) {
   const problem = props.original;
-  const tags = problem.tags;
+  const tags = problem.tags || [];
   console.log(problem);
   console.log(tags);
   let ticketId = '';
