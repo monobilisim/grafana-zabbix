@@ -52,10 +52,10 @@ export const UpdateCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDT
   const styles = getStyles(theme);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [ackMessage, setAckMessage] = useState('');
-  const ds: any = await getDataSourceSrv().get(problem.datasource);
 
   const handleUpdate = async () => {
     try {
+      const ds: any = await getDataSourceSrv().get(problem.datasource);
       const result = await ds.zabbix.acknowledgeEvent(problem.eventid, ackMessage);
       getAppEvents().emit('alert-success', ['', 'Acknowledge güncellemesi başarıyla çağırıldı']);
     } catch (error) {
