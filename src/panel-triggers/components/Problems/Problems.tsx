@@ -15,7 +15,7 @@ import { ProblemDTO, ZBXAlert, ZBXEvent, ZBXTag } from '../../../datasource/type
 import { APIExecuteScriptResponse, ZBXScript } from '../../../datasource/zabbix/connectors/zabbix_api/types';
 import { AckCell } from './AckCell';
 import { DataSourceRef, TimeRange } from '@grafana/data';
-import { reportInteraction, getDataSourceSrv } from '@grafana/runtime';
+import { reportInteraction, getDataSourceSrv, getAppEvents } from '@grafana/runtime';
 import { EmailModal } from './EmailModal';
 const allProblems = React.createContext(null);
 const currentProblem = React.createContext(null);
@@ -174,6 +174,8 @@ function ActionButtons(props: { original: ProblemDTO }) {
     updateTicketId: 'Update Ticket ID isimli bir script bulunamadı',
   });
 
+  const [scriptIDDoesNotMatchWithScriptName, setScriptIDDoesNotMatchWithScriptName] = [];
+
   useEffect(() => {
     const fetchScripts = async () => {
       try {
@@ -197,8 +199,30 @@ function ActionButtons(props: { original: ProblemDTO }) {
         });
 
         setScriptIDS(updatedScriptIDs);
+
+        const missingScripts = [];
+        if (updatedScriptIDs.createTicket === 'Create Ticket isimli bir script bulunamadı') {
+          missingScripts.push('Create Ticket');
+        }
+        if (updatedScriptIDs.closeTicket === 'Close Ticket isimli bir script bulunamadı') {
+          missingScripts.push('Close Ticket');
+        }
+        if (updatedScriptIDs.sendEmail === 'Send Email isimli bir script bulunamadı') {
+          missingScripts.push('Send Email');
+        }
+        if (updatedScriptIDs.updateTicketId === 'Update Ticket ID isimli bir script bulunamadı') {
+          missingScripts.push('Update Ticket ID');
+        }
+
+        if (missingScripts.length > 0) {
+          getAppEvents().emit('alert-warning', [
+            'Missing Scripts',
+            `The following scripts were not found on the host: ${missingScripts.join(', ')}`,
+          ]);
+        }
       } catch (error) {
         console.error('Failed to fetch scripts:', error);
+        getAppEvents().emit('alert-error', ['Script Error', 'Failed to fetch scripts from the host']);
       }
     };
     fetchScripts();
@@ -232,18 +256,68 @@ function ActionButtons(props: { original: ProblemDTO }) {
   const sendEmail = async (recipient: string) => {
     const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
 
-    return ds.zabbix.executeScript(scriptIDS.sendEmail, undefined, currentProblem.eventid, {
-      manualinput: manualInput,
+    const scripts: ZBXScript[] = await ds.zabbix.getScripts();
+
+    scripts.forEach((script) => {
+      if (script.scriptid === scriptIDS.sendEmail) {
+        if (script.name === 'Send Email') {
+          return ds.zabbix.executeScript(scriptIDS.sendEmail, undefined, currentProblem.eventid, {
+            manualinput: manualInput,
+          });
+        } else {
+          return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Send Email adı ile uyuşmuyor']);
+        }
+      }
     });
   };
 
   const handleTicketUpdate = async () => {
     const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
 
-    return ds.zabbix.executeScript(scriptIDS.updateTicketId, undefined, currentProblem.eventid, {
-      manualinput: manualInput,
+    const scripts: ZBXScript[] = await ds.zabbix.getScripts();
+
+    scripts.forEach((script) => {
+      if (script.scriptid === scriptIDS.updateTicketId) {
+        if (script.name === 'Send Email') {
+          return ds.zabbix.executeScript(scriptIDS.updateTicketId, undefined, currentProblem.eventid, {
+            manualinput: manualInput,
+          });
+        } else {
+          return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Update Ticket ID adı ile uyuşmuyor']);
+        }
+      }
     });
   };
+
+  async function closeTicket() {
+    const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
+
+    const scripts: ZBXScript[] = await ds.zabbix.getScripts();
+
+    scripts.forEach((script) => {
+      if (script.scriptid === scriptIDS.closeTicket) {
+        if (script.name === 'Close Ticket') {
+          return onExecuteScript(problem, scriptIDS.closeTicket);
+        }
+      }
+    });
+    return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Close Ticket adı ile uyuşmuyor']);
+  }
+
+  async function createTicket() {
+    const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
+
+    const scripts: ZBXScript[] = await ds.zabbix.getScripts();
+
+    scripts.forEach((script) => {
+      if (script.scriptid === scriptIDS.createTicket) {
+        if (script.name === 'Close Ticket') {
+          return onExecuteScript(problem, scriptIDS.createTicket);
+        }
+      }
+    });
+    return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Close Ticket adı ile uyuşmuyor']);
+  }
 
   const handleAction = (actionType: string, e: { stopPropagation: () => void }) => {
     e.stopPropagation();
@@ -253,10 +327,10 @@ function ActionButtons(props: { original: ProblemDTO }) {
         fetchScriptsAndSetCompanies(problem);
         break;
       case 'closeTicket':
-        onExecuteScript(problem, scriptIDS.closeTicket);
+        closeTicket();
         break;
       case 'createTicket':
-        onExecuteScript(problem, scriptIDS.createTicket);
+        createTicket();
         break;
       case 'updateTicketId':
         setIsTicketModalOpen(true);
