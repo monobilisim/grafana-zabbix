@@ -22,111 +22,6 @@ const currentProblem = React.createContext(null);
 import { TicketModal } from './UpdateTicketModal';
 import { UpdateCell } from './UpdateCell';
 
-const getStyles = stylesFactory(() => {
-  return {
-    actionButtons: css`
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-    `,
-    actionIcon: css`
-      padding: 4px;
-      cursor: pointer;
-      border-radius: 3px;
-      transition: background-color 0.2s ease;
-      margin: 0 2px;
-
-      &:hover {
-        background-color: rgba(204, 204, 220, 0.2);
-        color: #181b1f;
-      }
-    `,
-    actionColumn: css`
-      text-align: center;
-    `,
-    modalOverlay: css`
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    `,
-    modalContent: css`
-      background: #fff;
-      border-radius: 4px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-      max-width: 400px;
-      width: 100%;
-      position: relative;
-    `,
-    modalHeader: css`
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 15px;
-      display: flex;
-      justify-content: space-between;
-    `,
-    modalClose: css`
-      cursor: pointer;
-      font-size: 22px;
-      color: #666;
-      &:hover {
-        color: #333;
-      }
-    `,
-    formGroup: css`
-      margin-bottom: 15px;
-    `,
-    formLabel: css`
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-    `,
-    formInput: css`
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    `,
-    formSelect: css`
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    `,
-    formButton: css`
-      background: #3274d9;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      &:hover {
-        background: #2264c9;
-      }
-    `,
-    buttonGroup: css`
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 15px;
-    `,
-    cancelButton: css`
-      background: #e0e0e0;
-      color: #333;
-      &:hover {
-        background: #d0d0d0;
-      }
-    `,
-  };
-});
-
 const onExecuteScript = async (
   problem: ProblemDTO,
   scriptid: string,
@@ -560,6 +455,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       {
         Header: '',
         id: 'update',
+        width: 90,
         Cell: (props: { original: any }) => {
           const original = props.original;
 
@@ -616,7 +512,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Header: 'Ticket ID',
         id: 'ticketid',
         className: getStyles().actionColumn,
-        width: 60,
+        width: 100,
         sortable: true,
         filterable: false,
         Cell: (props: { original: any }) => {
@@ -856,3 +752,108 @@ function CustomExpander(props: RTCell<any>) {
     </span>
   );
 }
+
+const getStyles = stylesFactory(() => {
+  return {
+    actionButtons: css`
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    `,
+    actionIcon: css`
+      padding: 4px;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background-color 0.2s ease;
+      margin: 0 2px;
+
+      &:hover {
+        background-color: rgba(204, 204, 220, 0.2);
+        color: #181b1f;
+      }
+    `,
+    actionColumn: css`
+      text-align: center;
+    `,
+    modalOverlay: css`
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    `,
+    modalContent: css`
+      background: #fff;
+      border-radius: 4px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 100%;
+      position: relative;
+    `,
+    modalHeader: css`
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+    `,
+    modalClose: css`
+      cursor: pointer;
+      font-size: 22px;
+      color: #666;
+      &:hover {
+        color: #333;
+      }
+    `,
+    formGroup: css`
+      margin-bottom: 15px;
+    `,
+    formLabel: css`
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    `,
+    formInput: css`
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    `,
+    formSelect: css`
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    `,
+    formButton: css`
+      background: #3274d9;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      &:hover {
+        background: #2264c9;
+      }
+    `,
+    buttonGroup: css`
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 15px;
+    `,
+    cancelButton: css`
+      background: #e0e0e0;
+      color: #333;
+      &:hover {
+        background: #d0d0d0;
+      }
+    `,
+  };
+});

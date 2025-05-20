@@ -5,7 +5,7 @@ import { ProblemDTO } from '../../../datasource/types';
 import { FAIcon } from '../../../components';
 import { useTheme, stylesFactory, Modal, Button, HorizontalGroup, VerticalGroup } from '@grafana/ui';
 import { GrafanaTheme } from '@grafana/data';
-import { getBackendSrv } from '@grafana/runtime';
+import { getBackendSrv, getDataSourceSrv, getAppEvents } from '@grafana/runtime';
 
 const getStyles = stylesFactory((theme: GrafanaTheme) => {
   return {
@@ -51,8 +51,17 @@ export const UpdateCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDT
   const theme = useTheme();
   const styles = getStyles(theme);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [ackMessage, setAckMessage] = useState('');
+  const ds: any = await getDataSourceSrv().get(problem.datasource);
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
+    try {
+      const result = await ds.zabbix.acknowledgeEvent(problem.eventid, ackMessage);
+      getAppEvents().emit('alert-success', ['', 'Acknowledge güncellemesi başarıyla çağırıldı']);
+    } catch (error) {
+      getAppEvents().emit('alert-error', ['', 'Acknowledge güncelleme başarısız oldu']);
+    }
+
     console.log('Updating problem:', problem);
 
     setIsModalOpen(false);
@@ -68,12 +77,10 @@ export const UpdateCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDT
         <Modal isOpen={isModalOpen} title="Update Problem" onDismiss={() => setIsModalOpen(false)}>
           <VerticalGroup spacing="md">
             <div>
-              {/* Modal content goes here */}
-              <p>Are you sure you want to update this problem?</p>
               <p>
                 <strong>Problem:</strong> {problem.name}
               </p>
-              {/* Add more problem details here as needed */}
+              <textarea value={ackMessage} onChange={(e) => setAckMessage(e.target.value)}></textarea>
             </div>
 
             <HorizontalGroup justify="flex-end">
