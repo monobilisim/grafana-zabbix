@@ -5,6 +5,7 @@ import { ProblemDTO } from '../../../datasource/types';
 import { FAIcon } from '../../../components';
 import { useTheme, stylesFactory } from '@grafana/ui';
 import { GrafanaTheme } from '@grafana/data';
+import { getBackendSrv } from '@grafana/runtime';
 
 const getStyles = stylesFactory((theme: GrafanaTheme) => {
   return {
@@ -44,7 +45,7 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
         {problem.acknowledges?.length > 0 && (
           <>
             <FAIcon icon="comments" />
-            <span className={styles.countLabel}> ({problem.acknowledges.length})</span>
+            <button className={styles.countLabel}> ({problem.acknowledges.length})</button>
           </>
         )}
       </div>
@@ -56,7 +57,7 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
               <div>
                 <strong>
                   {ack.user || ack.name} {ack.surname}
-                </strong>{' '}
+                </strong>
                 on {ack.time}
               </div>
               {ack.message && <div>{ack.message}</div>}

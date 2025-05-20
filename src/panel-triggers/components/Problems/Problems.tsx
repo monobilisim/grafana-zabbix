@@ -14,12 +14,13 @@ import { ProblemsPanelOptions, RTCell, RTResized, TriggerSeverity } from '../../
 import { ProblemDTO, ZBXAlert, ZBXEvent, ZBXTag } from '../../../datasource/types';
 import { APIExecuteScriptResponse, ZBXScript } from '../../../datasource/zabbix/connectors/zabbix_api/types';
 import { AckCell } from './AckCell';
-import { DataSourceRef, TimeRange, AppEvents } from '@grafana/data';
-import { reportInteraction, getDataSourceSrv, getAppEvents, getBackendSrv } from '@grafana/runtime';
+import { DataSourceRef, TimeRange } from '@grafana/data';
+import { reportInteraction, getDataSourceSrv, getAppEvents } from '@grafana/runtime';
 import { EmailModal } from './EmailModal';
 const allProblems = React.createContext(null);
 const currentProblem = React.createContext(null);
 import { TicketModal } from './UpdateTicketModal';
+import { UpdateCell } from './UpdateCell';
 
 const getStyles = stylesFactory(() => {
   return {
@@ -557,6 +558,15 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       { Header: 'Problem', accessor: 'name', minWidth: 200, Cell: ProblemCell },
       { Header: 'Operational data', accessor: 'opdata', show: options.opdataField, width: 150, Cell: OpdataCell },
       {
+        Header: '',
+        id: 'update',
+        Cell: (props: { original: any }) => {
+          const original = props.original;
+
+          return <UpdateCell original={original} />;
+        },
+      },
+      {
         Header: 'Ack',
         id: 'ack',
         show: options.ackField,
@@ -606,7 +616,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Header: 'Ticket ID',
         id: 'ticketid',
         className: getStyles().actionColumn,
-        width: 30,
+        width: 60,
         sortable: true,
         filterable: false,
         Cell: (props: { original: any }) => {
