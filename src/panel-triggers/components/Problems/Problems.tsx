@@ -387,7 +387,12 @@ function TicketID(props: { original: ProblemDTO }) {
   const tags = problem.tags;
   console.log(problem);
   console.log(tags);
-  const ticketId = tags.find((tag) => tag.tag === 'TicketId');
+  let ticketId = '';
+  tags.forEach((tag) => {
+    if (tag.tag === 'TicketId') {
+      ticketId = tag.value;
+    }
+  });
   return <div>{ticketId ? ticketId.toString() : ''}</div>;
 }
 
