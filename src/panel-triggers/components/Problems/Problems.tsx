@@ -556,6 +556,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     const severityObject = scopeVariables.find((variable) => variable.name === 'Severity');
 
     if (severityObject) {
+      console.log(severityObject);
       selectedSeverityValues = severityObject.options.filter((option) => option.selected).map((option) => option.value);
 
       let selectedProblems = problemsToRender.filter((problem) => selectedSeverityValues.includes(problem.severity));
