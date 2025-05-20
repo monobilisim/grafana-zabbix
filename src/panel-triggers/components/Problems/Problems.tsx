@@ -161,7 +161,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
   const styles = getStyles();
   const problem: ProblemDTO = props.original;
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [currentProblem, setCurrentProblem] = useState(null);
+  const [currentProblem, setCurrentProblem] = useState(problem);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
@@ -255,17 +255,16 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
     const scripts: ZBXScript[] = await ds.zabbix.getScripts();
 
-    scripts.forEach((script) => {
-      if (script.scriptid === scriptIDS.sendEmail) {
-        if (script.name === 'Send Email') {
-          return ds.zabbix.executeScript(scriptIDS.sendEmail, undefined, currentProblem.eventid, {
-            manualinput: manualInput,
-          });
-        } else {
-          return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Send Email adı ile uyuşmuyor']);
-        }
-      }
-    });
+    const script = scripts.find((s) => s.scriptid === scriptIDS.sendEmail && s.name === 'Send Email');
+
+    if (script) {
+      getAppEvents().emit('alert-success', ['Success', 'Send Email çağırıldı']);
+      return ds.zabbix.executeScript(scriptIDS.sendEmail, undefined, currentProblem.eventid, {
+        manualinput: manualInput,
+      });
+    } else {
+      return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Send Email adı ile uyuşmuyor']);
+    }
   };
 
   const handleTicketUpdate = async () => {
@@ -273,17 +272,16 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
     const scripts: ZBXScript[] = await ds.zabbix.getScripts();
 
-    scripts.forEach((script) => {
-      if (script.scriptid === scriptIDS.updateTicketId) {
-        if (script.name === 'Update Ticket ID') {
-          return ds.zabbix.executeScript(scriptIDS.updateTicketId, undefined, currentProblem.eventid, {
-            manualinput: manualInput,
-          });
-        } else {
-          return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Update Ticket ID adı ile uyuşmuyor']);
-        }
-      }
-    });
+    const script = scripts.find((s) => s.scriptid === scriptIDS.updateTicketId && s.name === 'Update Ticket ID');
+
+    if (script) {
+      getAppEvents().emit('alert-success', ['Success', 'Update Ticket ID çağırıldı']);
+      return ds.zabbix.executeScript(scriptIDS.updateTicketId, undefined, currentProblem.eventid, {
+        manualinput: manualInput,
+      });
+    } else {
+      return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Update Ticket ID adı ile uyuşmuyor']);
+    }
   };
 
   async function closeTicket() {
@@ -291,19 +289,12 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
     const scripts: ZBXScript[] = await ds.zabbix.getScripts();
 
-    let scriptFound = false;
+    const script = scripts.find((s) => s.scriptid === scriptIDS.closeTicket && s.name === 'Close Ticket');
 
-    scripts.forEach((script) => {
-      if (script.scriptid === scriptIDS.closeTicket) {
-        if (script.name === 'Close Ticket') {
-          getAppEvents().emit('alert-success', ['Success', 'Close Ticket çağırıldı']);
-          scriptFound = true;
-          return onExecuteScript(problem, scriptIDS.closeTicket);
-        }
-      }
-    });
-
-    if (!scriptFound) {
+    if (script) {
+      getAppEvents().emit('alert-success', ['Success', 'Close Ticket çağırıldı']);
+      return onExecuteScript(problem, scriptIDS.closeTicket);
+    } else {
       return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Close Ticket adı ile uyuşmuyor']);
     }
   }
@@ -313,19 +304,12 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
     const scripts: ZBXScript[] = await ds.zabbix.getScripts();
 
-    let scriptFound = false;
+    const script = scripts.find((s) => s.scriptid === scriptIDS.createTicket && s.name === 'Create Ticket');
 
-    scripts.forEach((script) => {
-      if (script.scriptid === scriptIDS.createTicket) {
-        if (script.name === 'Create Ticket') {
-          getAppEvents().emit('alert-success', ['Success', 'Create Ticket çağırıldı']);
-          scriptFound = true;
-          return onExecuteScript(problem, scriptIDS.createTicket);
-        }
-      }
-    });
-
-    if (!scriptFound) {
+    if (script) {
+      getAppEvents().emit('alert-success', ['Success', 'Create Ticket çağırıldı']);
+      return onExecuteScript(problem, scriptIDS.createTicket);
+    } else {
       return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Create Ticket adı ile uyuşmuyor']);
     }
   }
