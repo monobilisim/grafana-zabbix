@@ -1,4 +1,4 @@
-import React, { PureComponent, useState } from 'react';
+import React, { PureComponent, useState, useEffect } from 'react';
 import { css, cx } from '@emotion/css';
 import ReactTable from 'react-table-6';
 import _ from 'lodash';
@@ -137,13 +137,6 @@ const onExecuteScript = async (
   return ds.zabbix.executeScript(scriptid, input, eventid);
 };
 
-const scriptIDS = {
-  sendEmail: '10',
-  closeTicket: '9',
-  createTicket: '7',
-  updateTicketId: '8',
-};
-
 const parseEmails = (scriptString: string) => {
   // Extract just the emails object by finding the boundaries
   const emailsStart = scriptString.indexOf('var emails = {');
@@ -174,21 +167,42 @@ function ActionButtons(props: { original: ProblemDTO }) {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [ticketId, setTicketId] = useState('');
   const [currentProblemForTicket, setCurrentProblemForTicket] = useState(null);
+  const [scriptIDS, setScriptIDS] = useState({
+    sendEmail: 'Send Email isimli bir script bulunamadı',
+    closeTicket: 'Close Ticket isimli bir script bulunamadı',
+    createTicket: 'Create Ticket isimli bir script bulunamadı',
+    updateTicketId: 'Update Ticket ID isimli bir script bulunamadı',
+  });
 
-  // scripts.forEach((script: object) => {
-  //   if (script.name === 'Create Ticket') {
-  //     scriptIDS.createTicket = script.scriptid;
-  //   }
-  //   if (script.name === 'Close Ticket') {
-  //     scriptIDS.closeTicket = script.scriptid;
-  //   }
-  //   if (script.name === 'Send Email') {
-  //     scriptIDS.sendEmail = script.scriptid;
-  //   }
-  //   if (script.name === 'Update Ticket ID') {
-  //     scriptIDS.updateTicketId = script.scriptid;
-  //   }
-  // });
+  useEffect(() => {
+    const fetchScripts = async () => {
+      try {
+        const ds: any = await getDataSourceSrv().get(problem.datasource);
+        const scripts: ZBXScript[] = await ds.zabbix.getScripts();
+
+        const updatedScriptIDs = { ...scriptIDS };
+        scripts.forEach((script) => {
+          if (script.name === 'Create Ticket') {
+            updatedScriptIDs.createTicket = script.scriptid;
+          }
+          if (script.name === 'Close Ticket') {
+            updatedScriptIDs.closeTicket = script.scriptid;
+          }
+          if (script.name === 'Send Email') {
+            updatedScriptIDs.sendEmail = script.scriptid;
+          }
+          if (script.name === 'Update Ticket ID') {
+            updatedScriptIDs.updateTicketId = script.scriptid;
+          }
+        });
+
+        setScriptIDS(updatedScriptIDs);
+      } catch (error) {
+        console.error('Failed to fetch scripts:', error);
+      }
+    };
+    fetchScripts();
+  }, [problem.datasource]);
 
   const fetchScriptsAndSetCompanies = async (problem: any) => {
     try {
