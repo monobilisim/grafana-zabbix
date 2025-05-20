@@ -268,14 +268,14 @@ function ActionButtons(props: { original: ProblemDTO }) {
     <>
       <div className={styles.actionButtons}>
         <i
-          className={cx('fa fa-check-square-o', styles.actionIcon)}
-          onClick={(e: any) => handleAction('closeTicket', e)}
-          title="Close ticket"
-        ></i>
-        <i
           className={cx('fa fa-plus-square', styles.actionIcon)}
           onClick={(e: any) => handleAction('createTicket', e)}
           title="Create ticket"
+        ></i>
+        <i
+          className={cx('fa fa-check-square-o', styles.actionIcon)}
+          onClick={(e: any) => handleAction('closeTicket', e)}
+          title="Close ticket"
         ></i>
         <i
           className={cx('fa fa-envelope-o', styles.actionIcon)}
