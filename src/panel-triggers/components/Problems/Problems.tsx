@@ -384,6 +384,13 @@ function ActionButtons(props: { original: ProblemDTO }) {
   );
 }
 
+function TicketID(props: { original: ProblemDTO }) {
+  const problem = props.original;
+  const tags = problem.tags;
+  const ticketId = tags.find((tag) => tag.tag === 'TicketId');
+  return <div>{ticketId}</div>;
+}
+
 export interface ProblemListProps {
   problems: ProblemDTO[];
   panelOptions: ProblemsPanelOptions;
@@ -590,6 +597,19 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           const original = props.original;
 
           return <ActionButtons original={original} />;
+        },
+      },
+      {
+        Header: 'Ticket ID',
+        id: 'ticketid',
+        className: getStyles().actionColumn,
+        width: 30,
+        sortable: true,
+        filterable: false,
+        Cell: (props: { original: any }) => {
+          const original = props.original;
+
+          return <TicketID original={original} />;
         },
       },
       {
