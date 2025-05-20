@@ -174,6 +174,8 @@ function ActionButtons(props: { original: ProblemDTO }) {
     updateTicketId: '',
   });
 
+  console.log(problem);
+
   useEffect(() => {
     const fetchScripts = async () => {
       try {
