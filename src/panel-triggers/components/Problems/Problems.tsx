@@ -558,12 +558,12 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
 
     let problemsToRender = this.props.problems;
     //const [problemsToRender, setProblemsToRender] = useState(this.props.problems);
-
+    console.log('problemsToRender:', problemsToRender);
     let selectedProblems = problemsToRender.filter((problem) => selectedSeverityValues.includes(problem.severity));
-
+    console.log('selected:', selectedProblems);
     problemsToRender = selectedProblems;
     //setProblemsToRender(selectedProblems);
-
+    console.log('problemsToRenderAfter:', problemsToRender);
     return (
       <div className={panelClass} ref={this.setRootRef}>
         <allProblems.Provider value={this.props.problems}>
