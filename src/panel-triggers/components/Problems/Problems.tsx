@@ -463,8 +463,8 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         },
       },
       {
-        Header: 'Ack',
-        id: 'ack',
+        Header: 'Msg',
+        id: 'msg',
         show: options.ackField,
         width: 70,
         Cell: (props: unknown) => <AckCell {...props} />,
