@@ -609,7 +609,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Cell: (props: { original: any }) => {
           const original = props.original;
 
-          return <TicketID original={original} />;
+          return original ? <TicketID original={original} /> : <div></div>;
         },
       },
       {
