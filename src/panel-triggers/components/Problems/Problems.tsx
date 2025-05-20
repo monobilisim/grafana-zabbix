@@ -168,10 +168,10 @@ function ActionButtons(props: { original: ProblemDTO }) {
   const [ticketId, setTicketId] = useState('');
   const [currentProblemForTicket, setCurrentProblemForTicket] = useState(null);
   const [scriptIDS, setScriptIDS] = useState({
-    sendEmail: 'Send Email isimli bir script bulunamadı',
-    closeTicket: 'Close Ticket isimli bir script bulunamadı',
-    createTicket: 'Create Ticket isimli bir script bulunamadı',
-    updateTicketId: 'Update Ticket ID isimli bir script bulunamadı',
+    sendEmail: '',
+    closeTicket: '',
+    createTicket: '',
+    updateTicketId: '',
   });
 
   useEffect(() => {
@@ -199,23 +199,23 @@ function ActionButtons(props: { original: ProblemDTO }) {
         setScriptIDS(updatedScriptIDs);
 
         const missingScripts = [];
-        if (updatedScriptIDs.createTicket === 'Create Ticket isimli bir script bulunamadı') {
+        if (updatedScriptIDs.createTicket === '') {
           missingScripts.push('Create Ticket');
         }
-        if (updatedScriptIDs.closeTicket === 'Close Ticket isimli bir script bulunamadı') {
+        if (updatedScriptIDs.closeTicket === '') {
           missingScripts.push('Close Ticket');
         }
-        if (updatedScriptIDs.sendEmail === 'Send Email isimli bir script bulunamadı') {
+        if (updatedScriptIDs.sendEmail === '') {
           missingScripts.push('Send Email');
         }
-        if (updatedScriptIDs.updateTicketId === 'Update Ticket ID isimli bir script bulunamadı') {
+        if (updatedScriptIDs.updateTicketId === '') {
           missingScripts.push('Update Ticket ID');
         }
 
         if (missingScripts.length > 0) {
           getAppEvents().emit('alert-warning', [
             'Missing Scripts',
-            `The following scripts were not found on the host: ${missingScripts.join(', ')}`,
+            `Scriptler bulunamadı: ${missingScripts.join(', ')}`,
           ]);
         }
       } catch (error) {
@@ -296,6 +296,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
     scripts.forEach((script) => {
       if (script.scriptid === scriptIDS.closeTicket) {
         if (script.name === 'Close Ticket') {
+          getAppEvents().emit('alert-success', ['Success', 'Close Ticket çağırıldı']);
           scriptFound = true;
           return onExecuteScript(problem, scriptIDS.closeTicket);
         }
@@ -317,6 +318,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
     scripts.forEach((script) => {
       if (script.scriptid === scriptIDS.createTicket) {
         if (script.name === 'Create Ticket') {
+          getAppEvents().emit('alert-success', ['Success', 'Create Ticket çağırıldı']);
           scriptFound = true;
           return onExecuteScript(problem, scriptIDS.createTicket);
         }
