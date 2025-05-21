@@ -110,7 +110,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
     let actions = 0;
     if (closeProblem) {
-      actions |= 1;
+      actions |= 2;
     }
     if (suppressProblem) {
       actions |= 32;
@@ -142,9 +142,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
       const resString = JSON.stringify({ grafanaUser: name, message: message });
 
-      const params = {
-        ...(closeProblem && { close_problem: '1' }),
-      };
+      const params = {};
 
       await ds.zabbix.acknowledgeEvent(problem.eventid, resString, actions, undefined, params);
 
