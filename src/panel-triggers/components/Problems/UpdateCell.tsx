@@ -56,7 +56,6 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  verialyazdir();
   // if (problem.isSuppressible !== null) {
   //   const isProblemSuppressible = problem.isSuppressible !== false;
   // }
@@ -106,6 +105,10 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
+    const backend = getBackendSrv();
+    const user = await backend.get('/api/user');
+    const name = user.name;
+
     let actions = 0;
     if (closeProblem) {
       actions |= 1;
@@ -147,7 +150,9 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
       const ds: any = await getDataSourceSrv().get(problem.datasource);
 
-      await ds.zabbix.acknowledgeEvent(problem.eventid, message);
+      const resString = JSON.stringify({ grafanaUser: name, message: message });
+
+      await ds.zabbix.acknowledgeEvent(problem.eventid, resString);
 
       // @ts-ignore
       getAppEvents().emit('alert-success', ['', 'Acknowledge update successfully invoked']);
