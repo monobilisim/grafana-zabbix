@@ -53,7 +53,6 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
               return (
                 <div key={ack.acknowledgeid || index} className={styles.ackItem}>
                   <>
-                    {parseMessage(ack.message)}
                     <div className={styles.ackHeader}>
                       <span className={styles.ackUser}>{parsedMessage.grafanaUser && parsedMessage.grafanaUser}</span>
                       <span className={styles.ackTime}>on {ack.time}</span>
