@@ -227,8 +227,13 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ isOpen, onDismiss, probl
   const [closeProblem, setCloseProblem] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isProblemSuppressible = problem.isSuppressible !== false;
-  const isProblemUnsuppressible = problem.isUnsuppressible !== false;
+  if (problem.isSuppressible !== null) {
+    const isProblemSuppressible = problem.isSuppressible !== false;
+  }
+
+  if (problem.isUnsuppressible !== null) {
+    const isProblemUnsuppressible = problem.isUnsuppressible !== false;
+  }
 
   const suppressProblemDisabled = !isProblemSuppressible || closeProblem || unsuppressProblem;
   const unsuppressProblemDisabled = !isProblemUnsuppressible || closeProblem || suppressProblem;
