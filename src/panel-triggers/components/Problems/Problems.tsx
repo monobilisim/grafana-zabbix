@@ -602,15 +602,19 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           resized={panelOptions.resizedColumns}
           minRows={0}
           loading={this.props.loading}
-          // TheadComponent={() => {
-          //   return (
-          //     Array.isArray(problemsToRender) && (
-          //       <div className={getStyles().downloadButtonContainer}>
-          //         <DownloadProblemsCsv problemsToRender={problemsToRender} />
-          //       </div>
-          //     )
-          //   );
-          // }}
+          TheadComponent={(headerProps) => {
+            return (
+              <>
+                <div className={getStyles().downloadButtonContainer}>
+                  {Array.isArray(problemsToRender) && <DownloadProblemsCsv problemsToRender={problemsToRender} />}
+                </div>
+                {/* This is important - we still need to render the original header content */}
+                <thead className="rt-thead -header" {...headerProps.className} style={headerProps.style}>
+                  {headerProps.children}
+                </thead>
+              </>
+            );
+          }}
           noDataText="No problems found"
           SubComponent={(props) => (
             <currentProblem.Provider value={props.original}>
