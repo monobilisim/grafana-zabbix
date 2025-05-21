@@ -153,7 +153,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
       const resString = JSON.stringify({ grafanaUser: name, message: message });
 
       const params = {
-        close_problem: closeProblem ? '1' : '0',
+        ...(closeProblem && { close_problem: '1' }),
       };
 
       await ds.zabbix.acknowledgeEvent(problem.eventid, resString, undefined, undefined, params);
