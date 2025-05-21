@@ -530,7 +530,6 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           return <TicketID original={original} />;
         },
       },
-      // Download button moved to render method
       {
         Header: '',
         className: 'custom-expander',

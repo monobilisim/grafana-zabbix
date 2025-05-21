@@ -16,6 +16,7 @@ import {
 } from '@grafana/ui';
 // @ts-ignore
 import { GrafanaTheme, SelectableValue } from '@grafana/data';
+import { ProblemDTO } from '../../../datasource/types';
 import { getDataSourceSrv, getAppEvents } from '@grafana/runtime'; // Added imports
 
 // Helper to define styles
@@ -185,20 +186,8 @@ interface ProblemHistoryItem {
   message: string;
 }
 
-interface ProblemData {
-  eventid: string;
-  name: string;
-  datasource: string; // Added datasource
-  history: ProblemHistoryItem[];
-  isSuppressible: boolean;
-  isUnsuppressible: boolean;
-}
-
 interface UpdateCellProps {
-  isOpen: boolean;
-  onDismiss: () => void;
-  // onSubmit prop removed as handleSubmit will call the API directly
-  problem: ProblemData;
+  problem: ProblemDTO;
 }
 
 const severityLevels: Array<SelectableValue<string> & { className: string }> = [
@@ -322,7 +311,6 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
       // @ts-ignore
       getAppEvents().emit('alert-success', ['', 'Acknowledge update successfully invoked']);
-      onDismiss();
     } catch (error) {
       console.error('Failed to update problem:', error);
       // @ts-ignore
@@ -359,7 +347,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     <>
       <button onClick={(e) => setIsOpen(!isOpen)}>Update</button>
 
-      <Modal isOpen={isOpen} title="Update Problem" onDismiss={onDismiss}>
+      <Modal isOpen={isOpen} title="Update Problem">
         <div className={styles.modalContent}>
           <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
             <ul className={styles.tableForms}>
@@ -387,13 +375,11 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
               </li>
 
               {/* History */}
-              {problem.history && problem.history.length > 0 && (
+              {/* {problem.history && problem.history.length > 0 && (
                 <li className={styles.tableFormsLi}>
                   <div className={styles.tableFormsTdLeft}>History</div>
                   <div className={styles.tableFormsTdRight}>
                     <div style={{ maxHeight: '150px', overflowY: 'auto', border: `1px solid ${styles.tableFormsLi}` }}>
-                      {' '}
-                      {/* FIXME: border color */}
                       <table className={styles.historyTable}>
                         <thead>
                           <tr>
@@ -417,7 +403,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
                     </div>
                   </div>
                 </li>
-              )}
+              )} */}
 
               {/* Scope */}
               <li className={styles.tableFormsLi}>
@@ -457,7 +443,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
                           className={cx(styles.severityList, styles[level.className as keyof typeof styles])}
                           style={{
                             padding: theme.spacing.xs,
-                            borderRadius: theme.shape.borderRadius(1),
+                            borderRadius: '4px',
                             opacity: severityRadiosDisabled ? 0.6 : 1,
                           }}
                         >
@@ -596,7 +582,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
             </ul>
           </form>
           <HorizontalGroup justify="flex-end" spacing="md" style={{ marginTop: theme.spacing.md }}>
-            <Button variant="secondary" onClick={onDismiss} disabled={isSubmitting}>
+            <Button variant="secondary" disabled={isSubmitting}>
               Cancel
             </Button>
             <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
