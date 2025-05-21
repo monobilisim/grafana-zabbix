@@ -432,7 +432,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
                       value={changeSeverity}
                       onChange={(e) => setChangeSeverity(e.currentTarget.checked)}
                     />
-                    <VerticalGroup>
+                    <HorizontalGroup spacing="md" align="flex-start">
                       {severityLevels.map((level) => (
                         <label
                           key={level.value}
@@ -455,7 +455,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
                           {level.label}
                         </label>
                       ))}
-                    </VerticalGroup>
+                    </HorizontalGroup>
                   </HorizontalGroup>
                 </div>
               </li>
