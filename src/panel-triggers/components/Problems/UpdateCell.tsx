@@ -1,102 +1,600 @@
-import React, { useState } from 'react';
-import { css } from '@emotion/css';
-import { RTCell } from '../../types';
-import { ProblemDTO } from '../../../datasource/types';
+import React, { useState, useEffect } from 'react';
+import { css, cx } from '@emotion/css';
 // @ts-ignore
-import { useTheme, stylesFactory, Modal, Button, HorizontalGroup, VerticalGroup } from '@grafana/ui';
-import { GrafanaTheme } from '@grafana/data';
-import { getBackendSrv, getDataSourceSrv, getAppEvents } from '@grafana/runtime';
+import {
+  useTheme,
+  stylesFactory,
+  Modal,
+  Button,
+  HorizontalGroup,
+  VerticalGroup,
+  Input,
+  TextArea,
+  RadioButtonGroup,
+  Checkbox,
+  Tooltip,
+} from '@grafana/ui';
+// @ts-ignore
+import { GrafanaTheme, SelectableValue } from '@grafana/data';
+import { getDataSourceSrv, getAppEvents } from '@grafana/runtime'; // Added imports
 
+// Helper to define styles
 const getStyles = stylesFactory((theme: GrafanaTheme) => {
+  const zabbixColors = {
+    naBg: theme.colors.bg2, // Not Classified
+    infoBg: theme.palette.blue95, // Information
+    warningBg: theme.palette.yellow, // Warning
+    averageBg: theme.palette.orange, // Average
+    highBg: theme.palette.red, // High
+    disasterBg: theme.palette.purple, // Disaster
+    textDark: theme.colors.text,
+    textLight: theme.colors.textStrong,
+    border: theme.colors.border1,
+    inputBg: theme.colors.formInputBg,
+    buttonPrimaryBg: theme.colors.primary,
+    buttonPrimaryText: theme.colors.primaryContrast,
+  };
+
   return {
-    label: css`
-      font-size: ${theme.typography.size.md};
-      color: ${theme.colors.blue};
-      cursor: pointer;
-    `,
-    modalOverlay: css`
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 1000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    `,
     modalContent: css`
-      width: 500px;
-      background: ${theme.colors.bg1};
-      border-radius: ${theme.border.radius.sm};
-      padding: ${theme.spacing.md};
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      width: 650px;
+      color: ${zabbixColors.textDark};
     `,
-    modalHeader: css`
-      font-size: ${theme.typography.heading.h3};
-      margin-bottom: ${theme.spacing.md};
-      color: ${theme.colors.text};
+    form: css`
+      font-size: ${theme.typography.size.sm};
     `,
-    buttonContainer: css`
-      margin-top: ${theme.spacing.lg};
+    tableForms: css`
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    `,
+    tableFormsLi: css`
       display: flex;
-      justify-content: flex-end;
+      padding: ${theme.spacing.sm} 0;
+      border-bottom: 1px solid ${zabbixColors.border};
+      &:last-child {
+        border-bottom: none;
+      }
+    `,
+    tableFormsTdLeft: css`
+      width: 150px;
+      padding-right: ${theme.spacing.md};
+      font-weight: ${theme.typography.fontWeightMedium};
+      display: flex;
+      align-items: flex-start; // Align with top of input
+      padding-top: ${theme.spacing.xs}; // Adjust for alignment
+    `,
+    tableFormsTdRight: css`
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    `,
+    wordbreak: css`
+      word-break: break-all;
+      padding-top: ${theme.spacing.xs};
+    `,
+    historyTable: css`
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: ${theme.spacing.xs};
+      font-size: ${theme.typography.size.xs};
+      th,
+      td {
+        border: 1px solid ${zabbixColors.border};
+        padding: ${theme.spacing.xs};
+        text-align: left;
+      }
+      th {
+        background-color: ${theme.colors.bg2};
+      }
+    `,
+    listCheckRadio: css`
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      li {
+        margin-bottom: ${theme.spacing.xs};
+      }
+    `,
+    severityList: css`
+      display: flex;
+      flex-direction: column;
+      gap: ${theme.spacing.xs};
+      li {
+        padding: ${theme.spacing.xs};
+        border-radius: ${theme.shape.borderRadius(1)};
+        input[type='radio'] {
+          margin-right: ${theme.spacing.sm};
+        }
+      }
+    `,
+    severityNa: css`
+      background-color: ${zabbixColors.naBg};
+    `,
+    severityInfo: css`
+      background-color: ${zabbixColors.infoBg};
+      color: ${zabbixColors.textLight};
+    `,
+    severityWarning: css`
+      background-color: ${zabbixColors.warningBg};
+      color: ${zabbixColors.textDark};
+    `,
+    severityAverage: css`
+      background-color: ${zabbixColors.averageBg};
+      color: ${zabbixColors.textLight};
+    `,
+    severityHigh: css`
+      background-color: ${zabbixColors.highBg};
+      color: ${zabbixColors.textLight};
+    `,
+    severityDisaster: css`
+      background-color: ${zabbixColors.disasterBg};
+      color: ${zabbixColors.textLight};
+    `,
+    horList: css`
+      display: flex;
+      align-items: center;
+      gap: ${theme.spacing.sm};
+      flex-wrap: wrap; // Allow wrapping
+    `,
+    formInputMargin: css`
+      margin-left: ${theme.spacing.md};
+      font-size: ${theme.typography.size.xs};
+      color: ${theme.colors.textWeak};
+    `,
+    helpButton: css`
+      background: none;
+      border: none;
+      color: ${theme.colors.textBlue};
+      cursor: pointer;
+      padding: 0 ${theme.spacing.xs};
+      font-size: ${theme.typography.size.md}; // Make icon a bit larger
+    `,
+    asteriskMessage: css`
+      color: ${theme.colors.textSemiWeak};
+      font-size: ${theme.typography.size.xs};
+      margin-top: ${theme.spacing.sm};
+    `,
+    textarea: css`
+      width: 100%;
+      min-height: 80px;
+      background-color: ${theme.colors.formInputBg};
+      border: 1px solid ${theme.colors.formInputBorder};
+      border-radius: ${theme.shape.borderRadius(1)};
+      color: ${theme.colors.formInputText};
+      padding: ${theme.spacing.sm};
+      &:focus {
+        border-color: ${theme.colors.formInputFocus};
+        outline: none;
+      }
+    `,
+    checkboxRadio: css`
+      margin-right: ${theme.spacing.xs};
+    `,
+    labelWithHelp: css`
+      display: flex;
+      align-items: center;
     `,
   };
 });
 
-export const UpdateCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>) => {
-  const problem = props.original;
+interface ProblemHistoryItem {
+  time: string;
+  user: string;
+  userAction: React.ReactNode;
+  message: string;
+}
+
+interface ProblemData {
+  eventid: string;
+  name: string;
+  datasource: string; // Added datasource
+  history: ProblemHistoryItem[];
+  isSuppressible: boolean;
+  isUnsuppressible: boolean;
+}
+
+interface UpdateCellProps {
+  isOpen: boolean;
+  onDismiss: () => void;
+  // onSubmit prop removed as handleSubmit will call the API directly
+  problem: ProblemData;
+}
+
+const severityLevels: Array<SelectableValue<string> & { className: string }> = [
+  { label: 'Not classified', value: '0', className: 'severityNa' },
+  { label: 'Information', value: '1', className: 'severityInfo' },
+  { label: 'Warning', value: '2', className: 'severityWarning' },
+  { label: 'Average', value: '3', className: 'severityAverage' },
+  { label: 'High', value: '4', className: 'severityHigh' },
+  { label: 'Disaster', value: '5', className: 'severityDisaster' },
+];
+
+export const UpdateCell: React.FC<UpdateCellProps> = ({ isOpen, onDismiss, problem }) => {
   const theme = useTheme();
   const styles = getStyles(theme);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [ackMessage, setAckMessage] = useState('');
 
-  const handleUpdate = async () => {
-    try {
-      const ds: any = await getDataSourceSrv().get(problem.datasource);
-      const result = await ds.zabbix.acknowledgeEvent(problem.eventid, ackMessage);
-      // @ts-ignore
-      getAppEvents().emit('alert-success', ['', 'Acknowledge güncellemesi başarıyla çağırıldı']);
-    } catch (error) {
-      // @ts-ignore
-      getAppEvents().emit('alert-error', ['', 'Acknowledge güncelleme başarısız oldu']);
+  const [message, setMessage] = useState('');
+  const [scope, setScope] = useState<string>('0');
+  const [changeSeverity, setChangeSeverity] = useState(false);
+  const [currentSeverity, setCurrentSeverity] = useState<string>('0');
+  const [suppressProblem, setSuppressProblem] = useState(false);
+  const [suppressTimeOption, setSuppressTimeOption] = useState<string>('1');
+  const [suppressUntilProblem, setSuppressUntilProblem] = useState('now+1d');
+  const [unsuppressProblem, setUnsuppressProblem] = useState(false);
+  const [acknowledgeProblem, setAcknowledgeProblem] = useState(false);
+  const [changeRank, setChangeRank] = useState(false);
+  const [closeProblem, setCloseProblem] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isProblemSuppressible = problem.isSuppressible !== false;
+  const isProblemUnsuppressible = problem.isUnsuppressible !== false;
+
+  const suppressProblemDisabled = !isProblemSuppressible || closeProblem || unsuppressProblem;
+  const unsuppressProblemDisabled = !isProblemUnsuppressible || closeProblem || suppressProblem;
+
+  useEffect(() => {
+    if (suppressProblemDisabled && suppressProblem) {
+      setSuppressProblem(false);
+    }
+  }, [suppressProblemDisabled, suppressProblem]);
+
+  useEffect(() => {
+    if (unsuppressProblemDisabled && unsuppressProblem) {
+      setUnsuppressProblem(false);
+    }
+  }, [unsuppressProblemDisabled, unsuppressProblem]);
+
+  const severityRadiosDisabled = !changeSeverity;
+  const suppressTimeOptionsElementsDisabled = !suppressProblem;
+  const suppressUntilInputDisabled = suppressTimeOptionsElementsDisabled || suppressTimeOption === '0';
+
+  useEffect(() => {
+    if (isOpen) {
+      setMessage('');
+      setScope('0');
+      setChangeSeverity(false);
+      setCurrentSeverity('0');
+      setSuppressProblem(false);
+      setSuppressTimeOption('1');
+      setSuppressUntilProblem('now+1d');
+      setUnsuppressProblem(false);
+      setAcknowledgeProblem(false);
+      setChangeRank(false);
+      setCloseProblem(false);
+    }
+  }, [isOpen]);
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+
+    let actions = 0;
+    if (closeProblem) {
+      actions |= 1;
+    }
+    if (acknowledgeProblem) {
+      actions |= 2;
+    }
+    if (changeSeverity) {
+      actions |= 8;
+    }
+    if (suppressProblem) {
+      actions |= 32;
+    }
+    if (unsuppressProblem) {
+      actions |= 64;
+    }
+    if (changeRank) {
+      actions |= 128;
     }
 
-    console.log('Updating problem:', problem);
+    if (actions === 0 && !message) {
+      // @ts-ignore
+      getAppEvents().emit('alert-warning', [
+        'Validation Error',
+        'At least one update operation or message must exist.',
+      ]);
+      setIsSubmitting(false);
+      return;
+    }
 
-    setIsModalOpen(false);
+    try {
+      if (!problem.datasource) {
+        console.error('Datasource is missing in problem data for UpdateCell.tsx');
+        // @ts-ignore
+        getAppEvents().emit('alert-error', ['Error', 'Datasource configuration missing for the problem.']);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const ds: any = await getDataSourceSrv().get(problem.datasource);
+
+      // Using the core logic from your original handleUpdate:
+      // This call primarily sends the event ID and message.
+      // Other actions (close, change severity etc.) might require a different or more comprehensive Zabbix API call
+      // on your datasource service (e.g., something like ds.zabbix.updateEventDetails(formDataObject))
+      await ds.zabbix.acknowledgeEvent(problem.eventid, message);
+
+      // @ts-ignore
+      getAppEvents().emit('alert-success', ['', 'Acknowledge update successfully invoked']);
+      onDismiss();
+    } catch (error) {
+      console.error('Failed to update problem:', error);
+      // @ts-ignore
+      getAppEvents().emit('alert-error', ['', 'Acknowledge update failed']);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  const renderHelpButton = (tooltipText: string, href?: string) => (
+    <Tooltip content={tooltipText} placement="top">
+      <a
+        href={href || '#'}
+        target={href ? '_blank' : undefined}
+        rel={href ? 'noopener noreferrer' : undefined}
+        className={styles.helpButton}
+        onClick={(e) => {
+          if (!href) {
+            e.preventDefault();
+          }
+        }}
+        aria-label="Help"
+      >
+        <i className="fa fa-question-circle"></i>
+      </a>
+    </Tooltip>
+  );
+
+  if (!isOpen) {
+    return null;
+  }
+
   return (
-    <>
-      <div onClick={() => setIsModalOpen(true)}>
-        <button className={styles.label}>Update</button>
+    <Modal isOpen={isOpen} title="Update Problem" onDismiss={onDismiss}>
+      <div className={styles.modalContent}>
+        <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
+          <ul className={styles.tableForms}>
+            {/* Problem Name */}
+            <li className={styles.tableFormsLi}>
+              <div className={styles.tableFormsTdLeft}>Problem</div>
+              <div className={cx(styles.tableFormsTdRight, styles.wordbreak)}>{problem.name}</div>
+            </li>
+
+            {/* Message */}
+            <li className={styles.tableFormsLi}>
+              <div className={styles.tableFormsTdLeft}>
+                <label htmlFor="acknowledge_message">Message</label>
+              </div>
+              <div className={styles.tableFormsTdRight}>
+                <TextArea
+                  id="acknowledge_message"
+                  value={message}
+                  onChange={(e) => setMessage(e.currentTarget.value)}
+                  rows={4}
+                  maxLength={2048}
+                  className={styles.textarea}
+                />
+              </div>
+            </li>
+
+            {/* History */}
+            {problem.history && problem.history.length > 0 && (
+              <li className={styles.tableFormsLi}>
+                <div className={styles.tableFormsTdLeft}>History</div>
+                <div className={styles.tableFormsTdRight}>
+                  <div style={{ maxHeight: '150px', overflowY: 'auto', border: `1px solid ${styles.tableFormsLi}` }}>
+                    {' '}
+                    {/* FIXME: border color */}
+                    <table className={styles.historyTable}>
+                      <thead>
+                        <tr>
+                          <th>Time</th>
+                          <th>User</th>
+                          <th>User action</th>
+                          <th>Message</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {problem.history.map((item, index) => (
+                          <tr key={index}>
+                            <td>{item.time}</td>
+                            <td>{item.user}</td>
+                            <td>{item.userAction}</td>
+                            <td className={styles.wordbreak}>{item.message}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </li>
+            )}
+
+            {/* Scope */}
+            <li className={styles.tableFormsLi}>
+              <div className={styles.tableFormsTdLeft}>Scope</div>
+              <div className={styles.tableFormsTdRight}>
+                <RadioButtonGroup
+                  options={[
+                    { label: 'Only selected problem', value: '0' },
+                    {
+                      label: 'Selected and all other problems of related triggers',
+                      value: '1',
+                      description: problem.eventid ? '1 event' : '',
+                    },
+                  ]}
+                  value={scope}
+                  onChange={setScope}
+                />
+              </div>
+            </li>
+
+            {/* Change Severity */}
+            <li className={styles.tableFormsLi}>
+              <div className={styles.tableFormsTdLeft}>
+                <label htmlFor="change_severity_cb">Change severity</label>
+              </div>
+              <div className={styles.tableFormsTdRight}>
+                <HorizontalGroup spacing="md" align="flex-start">
+                  <Checkbox
+                    id="change_severity_cb"
+                    value={changeSeverity}
+                    onChange={(e) => setChangeSeverity(e.currentTarget.checked)}
+                  />
+                  <VerticalGroup>
+                    {severityLevels.map((level) => (
+                      <label
+                        key={level.value}
+                        className={cx(styles.severityList, styles[level.className as keyof typeof styles])}
+                        style={{
+                          padding: theme.spacing.xs,
+                          borderRadius: theme.shape.borderRadius(1),
+                          opacity: severityRadiosDisabled ? 0.6 : 1,
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="severity"
+                          value={level.value}
+                          checked={currentSeverity === level.value}
+                          onChange={(e) => setCurrentSeverity(e.currentTarget.value)}
+                          disabled={severityRadiosDisabled}
+                          className={styles.checkboxRadio}
+                        />
+                        {level.label}
+                      </label>
+                    ))}
+                  </VerticalGroup>
+                </HorizontalGroup>
+              </div>
+            </li>
+
+            {/* Suppress Problem */}
+            <li className={styles.tableFormsLi}>
+              <div className={styles.tableFormsTdLeft}>
+                <div className={styles.labelWithHelp}>
+                  <label htmlFor="suppress_problem_cb">Suppress</label>
+                  {renderHelpButton(
+                    'Manual problem suppression. Date-time input accepts relative and absolute time format.'
+                  )}
+                </div>
+              </div>
+              <div className={styles.tableFormsTdRight}>
+                <HorizontalGroup spacing="md" align="flex-start" wrap>
+                  <Checkbox
+                    id="suppress_problem_cb"
+                    value={suppressProblem}
+                    onChange={(e) => setSuppressProblem(e.currentTarget.checked)}
+                    disabled={suppressProblemDisabled}
+                  />
+                  <RadioButtonGroup
+                    options={[
+                      { label: 'Indefinitely', value: '0' },
+                      { label: 'Until', value: '1' },
+                    ]}
+                    value={suppressTimeOption}
+                    onChange={setSuppressTimeOption}
+                    disabled={suppressTimeOptionsElementsDisabled}
+                  />
+                  <Input
+                    type="text"
+                    id="suppress_until_problem_input"
+                    value={suppressUntilProblem}
+                    onChange={(e) => setSuppressUntilProblem(e.currentTarget.value)}
+                    placeholder="now+1d"
+                    disabled={suppressUntilInputDisabled}
+                  />
+                </HorizontalGroup>
+              </div>
+            </li>
+
+            {/* Unsuppress Problem */}
+            <li className={styles.tableFormsLi}>
+              <div className={styles.tableFormsTdLeft}>
+                <div className={styles.labelWithHelp}>
+                  <label htmlFor="unsuppress_problem_cb">Unsuppress</label>
+                  {renderHelpButton('Deactivates manual suppression.')}
+                </div>
+              </div>
+              <div className={styles.tableFormsTdRight}>
+                <Checkbox
+                  id="unsuppress_problem_cb"
+                  value={unsuppressProblem}
+                  onChange={(e) => setUnsuppressProblem(e.currentTarget.checked)}
+                  disabled={unsuppressProblemDisabled}
+                />
+              </div>
+            </li>
+
+            {/* Acknowledge Problem */}
+            <li className={styles.tableFormsLi}>
+              <div className={styles.tableFormsTdLeft}>
+                <div className={styles.labelWithHelp}>
+                  <label htmlFor="acknowledge_problem_cb">Acknowledge</label>
+                  {renderHelpButton('Confirms the problem is noticed. Status change triggers action update operation.')}
+                </div>
+              </div>
+              <div className={styles.tableFormsTdRight}>
+                <Checkbox
+                  id="acknowledge_problem_cb"
+                  value={acknowledgeProblem}
+                  onChange={(e) => setAcknowledgeProblem(e.currentTarget.checked)}
+                />
+              </div>
+            </li>
+
+            {/* Convert to Cause (Change Rank) */}
+            <li className={styles.tableFormsLi}>
+              <div className={styles.tableFormsTdLeft}>
+                <div className={styles.labelWithHelp}>
+                  <label htmlFor="change_rank_cb">Convert to cause</label>
+                  {renderHelpButton('Converts a symptom event back to cause event.')}
+                </div>
+              </div>
+              <div className={styles.tableFormsTdRight}>
+                <Checkbox
+                  id="change_rank_cb"
+                  value={changeRank}
+                  onChange={(e) => setChangeRank(e.currentTarget.checked)}
+                  disabled={true}
+                />
+              </div>
+            </li>
+
+            {/* Close Problem */}
+            <li className={styles.tableFormsLi}>
+              <div className={styles.tableFormsTdLeft}>
+                <label htmlFor="close_problem_cb">Close problem</label>
+              </div>
+              <div className={styles.tableFormsTdRight}>
+                <Checkbox
+                  id="close_problem_cb"
+                  value={closeProblem}
+                  onChange={(e) => setCloseProblem(e.currentTarget.checked)}
+                />
+              </div>
+            </li>
+
+            {/* Asterisk Message */}
+            <li className={styles.tableFormsLi}>
+              <div className={styles.tableFormsTdLeft}></div>
+              <div className={styles.tableFormsTdRight}>
+                <div className={styles.asteriskMessage}>At least one update operation or message must exist.</div>
+              </div>
+            </li>
+          </ul>
+        </form>
+        <HorizontalGroup justify="flex-end" spacing="md" style={{ marginTop: theme.spacing.md }}>
+          <Button variant="secondary" onClick={onDismiss} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Updating...' : 'Update'}
+          </Button>
+        </HorizontalGroup>
       </div>
-
-      {isModalOpen && (
-        <Modal isOpen={isModalOpen} title="Update Problem" onDismiss={() => setIsModalOpen(false)}>
-          <VerticalGroup spacing="md">
-            <div>
-              <p>
-                <strong>Problem:</strong> {problem.name}
-              </p>
-              <textarea value={ackMessage} onChange={(e) => setAckMessage(e.target.value)}></textarea>
-            </div>
-
-            <HorizontalGroup justify="flex-end">
-              <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="primary" onClick={handleUpdate}>
-                Update
-              </Button>
-            </HorizontalGroup>
-          </VerticalGroup>
-        </Modal>
-      )}
-    </>
+    </Modal>
   );
 };
 
