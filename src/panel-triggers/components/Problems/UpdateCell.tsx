@@ -152,7 +152,11 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
       const resString = JSON.stringify({ grafanaUser: name, message: message });
 
-      await ds.zabbix.acknowledgeEvent(problem.eventid, resString);
+      const params = {
+        close_problem: closeProblem ? '1' : '0',
+      };
+
+      await ds.zabbix.acknowledgeEvent(problem.eventid, resString, undefined, undefined, params);
 
       // @ts-ignore
       getAppEvents().emit('alert-success', ['', 'Acknowledge update successfully invoked']);
@@ -220,96 +224,6 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
                 </div>
               </li>
 
-              {/* History */}
-              {/* {problem.history && problem.history.length > 0 && (
-                <li className={styles.tableFormsLi}>
-                  <div className={styles.tableFormsTdLeft}>History</div>
-                  <div className={styles.tableFormsTdRight}>
-                    <div style={{ maxHeight: '150px', overflowY: 'auto', border: `1px solid ${styles.tableFormsLi}` }}>
-                      <table className={styles.historyTable}>
-                        <thead>
-                          <tr>
-                            <th>Time</th>
-                            <th>User</th>
-                            <th>User action</th>
-                            <th>Message</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {problem.history.map((item, index) => (
-                            <tr key={index}>
-                              <td>{item.time}</td>
-                              <td>{item.user}</td>
-                              <td>{item.userAction}</td>
-                              <td className={styles.wordbreak}>{item.message}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </li>
-              )} */}
-
-              {/* Scope */}
-              <li className={styles.tableFormsLi}>
-                <div className={styles.tableFormsTdLeft}>Scope</div>
-                <div className={styles.tableFormsTdRight}>
-                  <RadioButtonGroup
-                    options={[
-                      { label: 'Only selected problem', value: '0' },
-                      {
-                        label: 'Selected and all other problems of related triggers',
-                        value: '1',
-                        description: problem.eventid ? '1 event' : '',
-                      },
-                    ]}
-                    value={scope}
-                    onChange={setScope}
-                  />
-                </div>
-              </li>
-
-              {/* Change Severity */}
-              <li className={styles.tableFormsLi}>
-                <div className={styles.tableFormsTdLeft}>
-                  <label htmlFor="change_severity_cb">Change severity</label>
-                </div>
-                <div className={styles.tableFormsTdRight}>
-                  <HorizontalGroup spacing="md" align="flex-start">
-                    <Checkbox
-                      id="change_severity_cb"
-                      value={changeSeverity}
-                      onChange={(e) => setChangeSeverity(e.currentTarget.checked)}
-                    />
-                    <HorizontalGroup spacing="md" align="flex-start">
-                      {severityLevels.map((level) => (
-                        <label
-                          key={level.value}
-                          className={cx(styles.severityList, styles[level.className as keyof typeof styles])}
-                          style={{
-                            padding: theme.spacing.xs,
-                            borderRadius: '4px',
-                            opacity: severityRadiosDisabled ? 0.6 : 1,
-                          }}
-                        >
-                          <input
-                            type="radio"
-                            name="severity"
-                            value={level.value}
-                            checked={currentSeverity === level.value}
-                            onChange={(e) => setCurrentSeverity(e.currentTarget.value)}
-                            disabled={severityRadiosDisabled}
-                            className={styles.checkboxRadio}
-                          />
-                          {level.label}
-                        </label>
-                      ))}
-                    </HorizontalGroup>
-                  </HorizontalGroup>
-                </div>
-              </li>
-
               {/* Suppress Problem */}
               <li className={styles.tableFormsLi}>
                 <div className={styles.tableFormsTdLeft}>
@@ -363,43 +277,6 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
                     value={unsuppressProblem}
                     onChange={(e) => setUnsuppressProblem(e.currentTarget.checked)}
                     disabled={unsuppressProblemDisabled}
-                  />
-                </div>
-              </li>
-
-              {/* Acknowledge Problem */}
-              <li className={styles.tableFormsLi}>
-                <div className={styles.tableFormsTdLeft}>
-                  <div className={styles.labelWithHelp}>
-                    <label htmlFor="acknowledge_problem_cb">Acknowledge</label>
-                    {renderHelpButton(
-                      'Confirms the problem is noticed. Status change triggers action update operation.'
-                    )}
-                  </div>
-                </div>
-                <div className={styles.tableFormsTdRight}>
-                  <Checkbox
-                    id="acknowledge_problem_cb"
-                    value={acknowledgeProblem}
-                    onChange={(e) => setAcknowledgeProblem(e.currentTarget.checked)}
-                  />
-                </div>
-              </li>
-
-              {/* Convert to Cause (Change Rank) */}
-              <li className={styles.tableFormsLi}>
-                <div className={styles.tableFormsTdLeft}>
-                  <div className={styles.labelWithHelp}>
-                    <label htmlFor="change_rank_cb">Convert to cause</label>
-                    {renderHelpButton('Converts a symptom event back to cause event.')}
-                  </div>
-                </div>
-                <div className={styles.tableFormsTdRight}>
-                  <Checkbox
-                    id="change_rank_cb"
-                    value={changeRank}
-                    onChange={(e) => setChangeRank(e.currentTarget.checked)}
-                    disabled={true}
                   />
                 </div>
               </li>

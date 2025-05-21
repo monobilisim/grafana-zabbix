@@ -121,7 +121,7 @@ export class ZabbixAPIConnector {
   // Zabbix API method wrappers //
   ////////////////////////////////
 
-  acknowledgeEvent(eventid: string, message: string, action?: number, severity?: number) {
+  acknowledgeEvent(eventid: string, message: string, action?: number, severity?: number, extraParams?: object) {
     if (!action) {
       action = semver.gte(this.version, '4.0.0') ? ZBX_ACK_ACTION_ADD_MESSAGE : ZBX_ACK_ACTION_NONE;
     }
@@ -130,6 +130,7 @@ export class ZabbixAPIConnector {
       eventids: eventid,
       message: message,
       action: action,
+      ...(extraParams && extraParams),
     };
 
     if (severity !== undefined) {
