@@ -57,7 +57,7 @@ export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ proble
       csvRows.push(values.join(','));
     }
 
-    const csvString = csvRows.join('\\n');
+    const csvString = csvRows.join('\n');
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     if (link.download !== undefined) {
