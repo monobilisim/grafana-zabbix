@@ -156,7 +156,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
         ...(closeProblem && { close_problem: '1' }),
       };
 
-      await ds.zabbix.acknowledgeEvent(problem.eventid, resString, undefined, undefined, params);
+      await ds.zabbix.acknowledgeEvent(problem.eventid, resString, actions, undefined, params);
 
       // @ts-ignore
       getAppEvents().emit('alert-success', ['', 'Acknowledge update successfully invoked']);
