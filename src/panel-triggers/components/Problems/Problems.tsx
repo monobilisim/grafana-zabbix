@@ -17,10 +17,10 @@ import { AckCell } from './AckCell';
 import { DataSourceRef, TimeRange } from '@grafana/data';
 import { reportInteraction, getDataSourceSrv, getAppEvents, getTemplateSrv } from '@grafana/runtime';
 import { EmailModal } from './EmailModal';
-const allProblems = React.createContext(null);
 const currentProblem = React.createContext(null);
 import { TicketModal } from './UpdateTicketModal';
 import { UpdateCell } from './UpdateCell';
+import { DownloadProblemsCsv } from './DownloadProblemsCsv';
 
 const onExecuteScript = async (
   problem: ProblemDTO,
@@ -529,6 +529,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           return <TicketID original={original} />;
         },
       },
+      // Download button moved to render method
       {
         Header: '',
         className: 'custom-expander',
@@ -591,49 +592,50 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
 
     return (
       <div className={panelClass} ref={this.setRootRef}>
-        <allProblems.Provider value={this.props.problems}>
-          <ReactTable
-            data={problemsToRender}
-            columns={columns}
-            defaultPageSize={10}
-            pageSize={pageSize}
-            pageSizeOptions={pageSizeOptions}
-            resized={panelOptions.resizedColumns}
-            minRows={0}
-            loading={this.props.loading}
-            noDataText="No problems found"
-            SubComponent={(props) => (
-              <currentProblem.Provider value={props.original}>
-                <ProblemDetails
-                  {...props}
-                  rootWidth={this.rootWidth}
-                  timeRange={this.props.timeRange}
-                  showTimeline={panelOptions.problemTimeline}
-                  allowDangerousHTML={panelOptions.allowDangerousHTML}
-                  panelId={this.props.panelId}
-                  getProblemEvents={this.props.getProblemEvents}
-                  getProblemAlerts={this.props.getProblemAlerts}
-                  getScripts={this.props.getScripts}
-                  onProblemAck={this.handleProblemAck}
-                  onExecuteScript={this.props.onExecuteScript}
-                  onTagClick={this.handleTagClick}
-                  subRows={false}
-                />
-              </currentProblem.Provider>
-            )}
-            expanded={this.getExpandedPage(this.state.page)}
-            onExpandedChange={this.handleExpandedChange}
-            onPageChange={(page: number) => {
-              reportInteraction('grafana_zabbix_panel_page_change', {
-                action: page > this.state.page ? 'next' : 'prev',
-              });
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+          <DownloadProblemsCsv problemsToRender={problemsToRender} />
+        </div>
+        <ReactTable
+          data={problemsToRender}
+          columns={columns}
+          defaultPageSize={10}
+          pageSize={pageSize}
+          pageSizeOptions={pageSizeOptions}
+          resized={panelOptions.resizedColumns}
+          minRows={0}
+          loading={this.props.loading}
+          noDataText="No problems found"
+          SubComponent={(props) => (
+            <currentProblem.Provider value={props.original}>
+              <ProblemDetails
+                {...props}
+                rootWidth={this.rootWidth}
+                timeRange={this.props.timeRange}
+                showTimeline={panelOptions.problemTimeline}
+                allowDangerousHTML={panelOptions.allowDangerousHTML}
+                panelId={this.props.panelId}
+                getProblemEvents={this.props.getProblemEvents}
+                getProblemAlerts={this.props.getProblemAlerts}
+                getScripts={this.props.getScripts}
+                onProblemAck={this.handleProblemAck}
+                onExecuteScript={this.props.onExecuteScript}
+                onTagClick={this.handleTagClick}
+                subRows={false}
+              />
+            </currentProblem.Provider>
+          )}
+          expanded={this.getExpandedPage(this.state.page)}
+          onExpandedChange={this.handleExpandedChange}
+          onPageChange={(page: number) => {
+            reportInteraction('grafana_zabbix_panel_page_change', {
+              action: page > this.state.page ? 'next' : 'prev',
+            });
 
-              this.setState({ page });
-            }}
-            onPageSizeChange={this.handlePageSizeChange}
-            onResizedChange={this.handleResizedChange}
-          />
-        </allProblems.Provider>
+            this.setState({ page });
+          }}
+          onPageSizeChange={this.handlePageSizeChange}
+          onResizedChange={this.handleResizedChange}
+        />
       </div>
     );
   }
