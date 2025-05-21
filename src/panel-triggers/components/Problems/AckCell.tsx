@@ -5,10 +5,104 @@ import { ProblemDTO } from '../../../datasource/types';
 import { FAIcon } from '../../../components';
 import { useTheme, stylesFactory } from '@grafana/ui';
 import { GrafanaTheme } from '@grafana/data';
-// import { getBackendSrv } from '@grafana/runtime'; // Not used in this component
+import { getBackendSrv } from '@grafana/runtime';
+
+function isValidJSONObject(str) {
+  try {
+    const parsed = JSON.parse(str);
+    if (typeof parsed === 'object' && parsed !== null) {
+      return true;
+    }
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
+interface MessageJson {
+  grafanaUser: string;
+  message: string;
+}
+
+export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>) => {
+  const problem = props.original;
+  const theme = useTheme();
+  const styles = getStyles(theme);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [messageJson, setMessageJson]: MessageJson = useState('');
+
+  function parseMessage(str) {
+    const parsed = JSON.parse(str);
+    setMessageJson(parsed);
+  }
+
+  // Prevent modal from closing when clicking inside it
+  const handleModalClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  return (
+    <>
+      <div onClick={() => setModalOpen(!modalOpen)} className={styles.clickableArea}>
+        {problem.acknowledges?.length > 0 && (
+          <>
+            <FAIcon icon="comments" />
+            <button className={styles.countLabel}>({problem.acknowledges.length})</button>
+          </>
+        )}
+      </div>
+
+      {modalOpen && problem.acknowledges && problem.acknowledges.length > 0 && (
+        <div className={styles.ackList} onClick={handleModalClick}>
+          {problem.acknowledges.map((ack, index) => {
+            if (isValidJSONObject(ack.message)) {
+              return (
+                <div key={ack.acknowledgeid || index} className={styles.ackItem}>
+                  <>
+                    {parseMessage(ack.message)}
+                    <div className={styles.ackHeader}>
+                      <span className={styles.ackUser}>{messageJson.grafanaUser}</span>
+                      <span className={styles.ackTime}>on {ack.time}</span>
+                    </div>
+                    {messageJson.message && <div className={styles.ackMessage}>{messageJson.message}</div>}
+                    {ack.action === '4' && <div className={styles.ackAction}>Acknowledged</div>}
+                    {ack.action === '8' && (
+                      <div className={styles.ackAction}>
+                        {/* @ts-ignore */}
+                        Changed severity from {ack.old_severity} to {ack.new_severity}
+                      </div>
+                    )}
+                  </>
+                </div>
+              );
+            }
+
+            return (
+              <div key={ack.acknowledgeid || index} className={styles.ackItem}>
+                <div className={styles.ackHeader}>
+                  <span className={styles.ackUser}>
+                    {ack.user || ack.name} {ack.surname}
+                  </span>
+                  <span className={styles.ackTime}>on {ack.time}</span>
+                </div>
+                {ack.message && <div className={styles.ackMessage}>{ack.message}</div>}
+                {ack.action === '4' && <div className={styles.ackAction}>Acknowledged</div>}
+                {ack.action === '8' && (
+                  <div className={styles.ackAction}>
+                    {/* @ts-ignore */}
+                    Changed severity from {ack.old_severity} to {ack.new_severity}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+};
 
 const getStyles = stylesFactory((theme: GrafanaTheme) => {
-  // Using theme for colors, typography, borders, shadows, but hardcoding spacing
   return {
     countLabel: css`
       font-size: ${theme.typography.size.sm};
@@ -79,51 +173,3 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
     `,
   };
 });
-
-export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>) => {
-  const problem = props.original;
-  const theme = useTheme();
-  const styles = getStyles(theme);
-  const [modalOpen, setModalOpen] = useState(false);
-
-  // Prevent modal from closing when clicking inside it
-  const handleModalClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
-  return (
-    <>
-      <div onClick={() => setModalOpen(!modalOpen)} className={styles.clickableArea}>
-        {problem.acknowledges?.length > 0 && (
-          <>
-            <FAIcon icon="comments" />
-            <button className={styles.countLabel}>({problem.acknowledges.length})</button>
-          </>
-        )}
-      </div>
-
-      {modalOpen && problem.acknowledges && problem.acknowledges.length > 0 && (
-        <div className={styles.ackList} onClick={handleModalClick}>
-          {problem.acknowledges.map((ack, index) => (
-            <div key={ack.acknowledgeid || index} className={styles.ackItem}>
-              <div className={styles.ackHeader}>
-                <span className={styles.ackUser}>
-                  {ack.user || ack.name} {ack.surname}
-                </span>
-                <span className={styles.ackTime}>on {ack.time}</span>
-              </div>
-              {ack.message && <div className={styles.ackMessage}>{ack.message}</div>}
-              {ack.action === '4' && <div className={styles.ackAction}>Acknowledged</div>}
-              {ack.action === '8' && (
-                <div className={styles.ackAction}>
-                  {/* @ts-ignore */}
-                  Changed severity from {ack.old_severity} to {ack.new_severity}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </>
-  );
-};
