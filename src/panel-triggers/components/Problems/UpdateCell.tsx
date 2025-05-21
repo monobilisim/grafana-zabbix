@@ -111,10 +111,11 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     let actions = 0;
 
     if (closeProblem) {
-      actions |= 2;
+      actions |= 1; // acknowledge
+      actions |= 2; // close problem
     }
     // Grafana User'ı mesajda içerdiğimiz için her istek mesaj bulunduruyor
-    actions |= 4;
+    actions |= 4; // message
     if (suppressProblem) {
       actions |= 32;
     }
@@ -150,13 +151,15 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
       await ds.zabbix.acknowledgeEvent(problem.eventid, resString, actions, undefined, params);
 
       // @ts-ignore
-      getAppEvents().emit('alert-success', ['', 'Acknowledge update successfully invoked']);
+      getAppEvents().emit('alert-success', ['', 'İşlem başarıyla çağırıldı']);
+      setIsOpen(false);
     } catch (error) {
-      console.error('Failed to update problem:', error);
       // @ts-ignore
       getAppEvents().emit('alert-error', ['', 'Acknowledge update failed']);
+      setIsOpen(false);
     } finally {
       setIsSubmitting(false);
+      setIsOpen(false);
     }
   };
 
