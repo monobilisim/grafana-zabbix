@@ -17,174 +17,7 @@ import {
 // @ts-ignore
 import { GrafanaTheme, SelectableValue } from '@grafana/data';
 import { ProblemDTO } from '../../../datasource/types';
-import { getDataSourceSrv, getAppEvents } from '@grafana/runtime'; // Added imports
-
-// Helper to define styles
-const getStyles = stylesFactory((theme: GrafanaTheme) => {
-  const zabbixColors = {
-    naBg: theme.colors.bg2, // Not Classified
-    infoBg: theme.palette.blue95, // Information
-    warningBg: theme.palette.yellow, // Warning
-    averageBg: theme.palette.orange, // Average
-    highBg: theme.palette.red, // High
-    disasterBg: theme.palette.purple, // Disaster
-    textDark: theme.colors.text,
-    textLight: theme.colors.textStrong,
-    border: theme.colors.border1,
-    inputBg: theme.colors.formInputBg,
-    buttonPrimaryBg: theme.colors.primary,
-    buttonPrimaryText: theme.colors.primaryContrast,
-  };
-
-  return {
-    modalContent: css`
-      width: 650px;
-      color: ${zabbixColors.textDark};
-    `,
-    form: css`
-      font-size: ${theme.typography.size.sm};
-    `,
-    tableForms: css`
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    `,
-    tableFormsLi: css`
-      display: flex;
-      padding: ${theme.spacing.sm} 0;
-      border-bottom: 1px solid ${zabbixColors.border};
-      &:last-child {
-        border-bottom: none;
-      }
-    `,
-    tableFormsTdLeft: css`
-      width: 150px;
-      padding-right: ${theme.spacing.md};
-      font-weight: ${theme.typography.fontWeightMedium};
-      display: flex;
-      align-items: flex-start; // Align with top of input
-      padding-top: ${theme.spacing.xs}; // Adjust for alignment
-    `,
-    tableFormsTdRight: css`
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    `,
-    wordbreak: css`
-      word-break: break-all;
-      padding-top: ${theme.spacing.xs};
-    `,
-    historyTable: css`
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: ${theme.spacing.xs};
-      font-size: ${theme.typography.size.xs};
-      th,
-      td {
-        border: 1px solid ${zabbixColors.border};
-        padding: ${theme.spacing.xs};
-        text-align: left;
-      }
-      th {
-        background-color: ${theme.colors.bg2};
-      }
-    `,
-    listCheckRadio: css`
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      li {
-        margin-bottom: ${theme.spacing.xs};
-      }
-    `,
-    severityList: css`
-      display: flex;
-      flex-direction: column;
-      gap: ${theme.spacing.xs};
-      li {
-        padding: ${theme.spacing.xs};
-        border-radius: 4px; // Changed to pure CSS
-        input[type='radio'] {
-          margin-right: ${theme.spacing.sm};
-        }
-      }
-    `,
-    severityNa: css`
-      background-color: ${zabbixColors.naBg};
-    `,
-    severityInfo: css`
-      background-color: ${zabbixColors.infoBg};
-      color: ${zabbixColors.textLight};
-    `,
-    severityWarning: css`
-      background-color: ${zabbixColors.warningBg};
-      color: ${zabbixColors.textDark};
-    `,
-    severityAverage: css`
-      background-color: ${zabbixColors.averageBg};
-      color: ${zabbixColors.textLight};
-    `,
-    severityHigh: css`
-      background-color: ${zabbixColors.highBg};
-      color: ${zabbixColors.textLight};
-    `,
-    severityDisaster: css`
-      background-color: ${zabbixColors.disasterBg};
-      color: ${zabbixColors.textLight};
-    `,
-    horList: css`
-      display: flex;
-      align-items: center;
-      gap: ${theme.spacing.sm};
-      flex-wrap: wrap; // Allow wrapping
-    `,
-    formInputMargin: css`
-      margin-left: ${theme.spacing.md};
-      font-size: ${theme.typography.size.xs};
-      color: ${theme.colors.textWeak};
-    `,
-    helpButton: css`
-      background: none;
-      border: none;
-      color: ${theme.colors.textBlue};
-      cursor: pointer;
-      padding: 0 ${theme.spacing.xs};
-      font-size: ${theme.typography.size.md}; // Make icon a bit larger
-    `,
-    asteriskMessage: css`
-      color: ${theme.colors.textSemiWeak};
-      font-size: ${theme.typography.size.xs};
-      margin-top: ${theme.spacing.sm};
-    `,
-    textarea: css`
-      width: 100%;
-      min-height: 80px;
-      background-color: ${theme.colors.formInputBg};
-      border: 1px solid ${theme.colors.formInputBorder};
-      border-radius: 4px; // Changed to pure CSS
-      color: ${theme.colors.formInputText};
-      padding: ${theme.spacing.sm};
-      &:focus {
-        border-color: ${theme.colors.formInputFocus};
-        outline: none;
-      }
-    `,
-    checkboxRadio: css`
-      margin-right: ${theme.spacing.xs};
-    `,
-    labelWithHelp: css`
-      display: flex;
-      align-items: center;
-    `,
-  };
-});
-
-interface ProblemHistoryItem {
-  time: string;
-  user: string;
-  userAction: React.ReactNode;
-  message: string;
-}
+import { getDataSourceSrv, getAppEvents, getBackendSrv } from '@grafana/runtime'; // Added imports
 
 interface UpdateCellProps {
   problem: ProblemDTO;
@@ -198,6 +31,12 @@ const severityLevels: Array<SelectableValue<string> & { className: string }> = [
   { label: 'High', value: '4', className: 'severityHigh' },
   { label: 'Disaster', value: '5', className: 'severityDisaster' },
 ];
+
+async function verialyazdir() {
+  const backend = getBackendSrv();
+  const user = backend.fetch('/api/user');
+  console.log(user);
+}
 
 export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
   const theme = useTheme();
@@ -217,6 +56,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  verialyazdir();
   // if (problem.isSuppressible !== null) {
   //   const isProblemSuppressible = problem.isSuppressible !== false;
   // }
@@ -597,3 +437,162 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 };
 
 export default UpdateCell;
+
+const getStyles = stylesFactory((theme: GrafanaTheme) => {
+  const zabbixColors = {
+    naBg: theme.colors.bg2, // Not Classified
+    infoBg: theme.palette.blue95, // Information
+    warningBg: theme.palette.yellow, // Warning
+    averageBg: theme.palette.orange, // Average
+    highBg: theme.palette.red, // High
+    disasterBg: theme.palette.purple, // Disaster
+    textDark: theme.colors.text,
+    textLight: theme.colors.textStrong,
+    border: theme.colors.border1,
+    inputBg: theme.colors.formInputBg,
+    buttonPrimaryBg: theme.colors.primary,
+    buttonPrimaryText: theme.colors.primaryContrast,
+  };
+
+  return {
+    modalContent: css`
+      width: 650px;
+      color: ${zabbixColors.textDark};
+    `,
+    form: css`
+      font-size: ${theme.typography.size.sm};
+    `,
+    tableForms: css`
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    `,
+    tableFormsLi: css`
+      display: flex;
+      padding: ${theme.spacing.sm} 0;
+      border-bottom: 1px solid ${zabbixColors.border};
+      &:last-child {
+        border-bottom: none;
+      }
+    `,
+    tableFormsTdLeft: css`
+      width: 150px;
+      padding-right: ${theme.spacing.md};
+      font-weight: ${theme.typography.fontWeightMedium};
+      display: flex;
+      align-items: flex-start; // Align with top of input
+      padding-top: ${theme.spacing.xs}; // Adjust for alignment
+    `,
+    tableFormsTdRight: css`
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    `,
+    wordbreak: css`
+      word-break: break-all;
+      padding-top: ${theme.spacing.xs};
+    `,
+    historyTable: css`
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: ${theme.spacing.xs};
+      font-size: ${theme.typography.size.xs};
+      th,
+      td {
+        border: 1px solid ${zabbixColors.border};
+        padding: ${theme.spacing.xs};
+        text-align: left;
+      }
+      th {
+        background-color: ${theme.colors.bg2};
+      }
+    `,
+    listCheckRadio: css`
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      li {
+        margin-bottom: ${theme.spacing.xs};
+      }
+    `,
+    severityList: css`
+      display: flex;
+      flex-direction: column;
+      gap: ${theme.spacing.xs};
+      li {
+        padding: ${theme.spacing.xs};
+        border-radius: 4px; // Changed to pure CSS
+        input[type='radio'] {
+          margin-right: ${theme.spacing.sm};
+        }
+      }
+    `,
+    severityNa: css`
+      background-color: ${zabbixColors.naBg};
+    `,
+    severityInfo: css`
+      background-color: ${zabbixColors.infoBg};
+      color: ${zabbixColors.textLight};
+    `,
+    severityWarning: css`
+      background-color: ${zabbixColors.warningBg};
+      color: ${zabbixColors.textDark};
+    `,
+    severityAverage: css`
+      background-color: ${zabbixColors.averageBg};
+      color: ${zabbixColors.textLight};
+    `,
+    severityHigh: css`
+      background-color: ${zabbixColors.highBg};
+      color: ${zabbixColors.textLight};
+    `,
+    severityDisaster: css`
+      background-color: ${zabbixColors.disasterBg};
+      color: ${zabbixColors.textLight};
+    `,
+    horList: css`
+      display: flex;
+      align-items: center;
+      gap: ${theme.spacing.sm};
+      flex-wrap: wrap; // Allow wrapping
+    `,
+    formInputMargin: css`
+      margin-left: ${theme.spacing.md};
+      font-size: ${theme.typography.size.xs};
+      color: ${theme.colors.textWeak};
+    `,
+    helpButton: css`
+      background: none;
+      border: none;
+      color: ${theme.colors.textBlue};
+      cursor: pointer;
+      padding: 0 ${theme.spacing.xs};
+      font-size: ${theme.typography.size.md}; // Make icon a bit larger
+    `,
+    asteriskMessage: css`
+      color: ${theme.colors.textSemiWeak};
+      font-size: ${theme.typography.size.xs};
+      margin-top: ${theme.spacing.sm};
+    `,
+    textarea: css`
+      width: 100%;
+      min-height: 80px;
+      background-color: ${theme.colors.formInputBg};
+      border: 1px solid ${theme.colors.formInputBorder};
+      border-radius: 4px; // Changed to pure CSS
+      color: ${theme.colors.formInputText};
+      padding: ${theme.spacing.sm};
+      &:focus {
+        border-color: ${theme.colors.formInputFocus};
+        outline: none;
+      }
+    `,
+    checkboxRadio: css`
+      margin-right: ${theme.spacing.xs};
+    `,
+    labelWithHelp: css`
+      display: flex;
+      align-items: center;
+    `,
+  };
+});

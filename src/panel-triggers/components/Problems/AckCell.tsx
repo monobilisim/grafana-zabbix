@@ -5,7 +5,6 @@ import { ProblemDTO } from '../../../datasource/types';
 import { FAIcon } from '../../../components';
 import { useTheme, stylesFactory } from '@grafana/ui';
 import { GrafanaTheme } from '@grafana/data';
-import { getBackendSrv } from '@grafana/runtime';
 
 function isValidJSONObject(str) {
   try {
@@ -58,7 +57,6 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                       <span className={styles.ackTime}>on {ack.time}</span>
                     </div>
                     {parsedMessage.message && <div className={styles.ackMessage}>{parsedMessage.message}</div>}
-                    {ack.action === '4' && <div className={styles.ackAction}>Acknowledged</div>}
                     {ack.action === '8' && (
                       <div className={styles.ackAction}>
                         {/* @ts-ignore */}
@@ -79,7 +77,6 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                   <span className={styles.ackTime}>on {ack.time}</span>
                 </div>
                 {ack.message && <div className={styles.ackMessage}>{ack.message}</div>}
-                {ack.action === '4' && <div className={styles.ackAction}>Acknowledged</div>}
                 {ack.action === '8' && (
                   <div className={styles.ackAction}>
                     {/* @ts-ignore */}
