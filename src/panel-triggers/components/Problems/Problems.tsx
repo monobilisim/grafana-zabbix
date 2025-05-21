@@ -602,15 +602,15 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           resized={panelOptions.resizedColumns}
           minRows={0}
           loading={this.props.loading}
-          TheadComponent={() => {
-            return (
-              Array.isArray(problemsToRender) && (
-                <div className={getStyles().downloadButtonContainer}>
-                  <DownloadProblemsCsv problemsToRender={problemsToRender} />
-                </div>
-              )
-            );
-          }}
+          // TheadComponent={() => {
+          //   return (
+          //     Array.isArray(problemsToRender) && (
+          //       <div className={getStyles().downloadButtonContainer}>
+          //         <DownloadProblemsCsv problemsToRender={problemsToRender} />
+          //       </div>
+          //     )
+          //   );
+          // }}
           noDataText="No problems found"
           SubComponent={(props) => (
             <currentProblem.Provider value={props.original}>
