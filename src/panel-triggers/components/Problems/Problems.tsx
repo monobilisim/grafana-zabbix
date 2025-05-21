@@ -463,10 +463,10 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         id: 'update',
         width: 90,
         Cell: (props: { original: any }) => {
-          const original = props.original;
+          const problem = props.original;
 
           // @ts-ignore
-          return <UpdateCell original={original} />;
+          return <UpdateCell problem={problem} />;
         },
       },
       {

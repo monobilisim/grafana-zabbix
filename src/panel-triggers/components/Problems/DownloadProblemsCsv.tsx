@@ -15,6 +15,16 @@ export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ proble
       return;
     }
 
+    // Severity mapping
+    const severityMap = {
+      0: 'Not classified',
+      1: 'Information',
+      2: 'Warning',
+      3: 'Average',
+      4: 'High',
+      5: 'Disaster',
+    };
+
     // New headers to match Zabbix format
     const headers = [
       'Severity',
@@ -70,9 +80,12 @@ export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ proble
       // Determine Ack status
       const ack = problem.acknowledged === '1' ? 'Yes' : 'No';
 
+      // Map severity number to text
+      const severityText = severityMap[problem.severity] || `Unknown (${problem.severity})`;
+
       // Format values for each row
       const values = [
-        problem.severity, // Severity
+        severityText, // Severity text instead of number
         formatTimestamp(problem.timestamp), // Time
         problem.r_eventid ? formatTimestamp(problem.r_timestamp) : '', // Recovery time
         status, // Status

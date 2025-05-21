@@ -210,7 +210,7 @@ const severityLevels: Array<SelectableValue<string> & { className: string }> = [
   { label: 'Disaster', value: '5', className: 'severityDisaster' },
 ];
 
-export const UpdateCell: React.FC<UpdateCellProps> = ({ onDismiss, problem }) => {
+export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
   const theme = useTheme();
   const styles = getStyles(theme);
 
