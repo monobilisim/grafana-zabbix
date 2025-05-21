@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProblemDTO } from 'types';
+import { ProblemDTO } from '../../../datasource/types';
 import { getAppEvents } from '@grafana/runtime';
 import { Button } from '@grafana/ui';
 
@@ -7,7 +7,7 @@ interface DownloadProblemsCsvProps {
   problemsToRender: ProblemDTO[];
 }
 
-const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ problemsToRender }) => {
+export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ problemsToRender }) => {
   const handleDownloadCsv = () => {
     if (!problemsToRender || problemsToRender.length === 0) {
       // @ts-ignore
@@ -88,5 +88,3 @@ const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ problemsToRen
     </Button>
   );
 };
-
-export default DownloadProblemsCsv;

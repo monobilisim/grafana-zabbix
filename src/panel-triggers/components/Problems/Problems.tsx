@@ -17,10 +17,11 @@ import { AckCell } from './AckCell';
 import { DataSourceRef, TimeRange } from '@grafana/data';
 import { reportInteraction, getDataSourceSrv, getAppEvents, getTemplateSrv } from '@grafana/runtime';
 import { EmailModal } from './EmailModal';
-const currentProblem = React.createContext(null);
 import { TicketModal } from './UpdateTicketModal';
 import { UpdateCell } from './UpdateCell';
 import { DownloadProblemsCsv } from './DownloadProblemsCsv';
+
+const currentProblem = React.createContext<ProblemDTO | null>(null);
 
 const onExecuteScript = async (
   problem: ProblemDTO,
@@ -592,9 +593,11 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
 
     return (
       <div className={panelClass} ref={this.setRootRef}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-          <DownloadProblemsCsv problemsToRender={problemsToRender} />
-        </div>
+        {Array.isArray(problemsToRender) && (
+          <div className={getStyles().downloadButtonContainer}>
+            <DownloadProblemsCsv problemsToRender={problemsToRender} />
+          </div>
+        )}
         <ReactTable
           data={problemsToRender}
           columns={columns}
@@ -799,6 +802,11 @@ function CustomExpander(props: RTCell<any>) {
 
 const getStyles = stylesFactory(() => {
   return {
+    downloadButtonContainer: css`
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    `,
     actionButtons: css`
       display: flex;
       justify-content: space-around;
