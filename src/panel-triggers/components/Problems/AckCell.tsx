@@ -29,12 +29,6 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
   const theme = useTheme();
   const styles = getStyles(theme);
   const [modalOpen, setModalOpen] = useState(false);
-  const [messageJson, setMessageJson]: MessageJson = useState('');
-
-  function parseMessage(str) {
-    const parsed = JSON.parse(str);
-    setMessageJson(parsed);
-  }
 
   const handleModalClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -55,15 +49,16 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
         <div className={styles.ackList} onClick={handleModalClick}>
           {problem.acknowledges.map((ack, index) => {
             if (isValidJSONObject(ack.message)) {
+              const parsedMessage = JSON.parse(ack.message) as MessageJson;
               return (
                 <div key={ack.acknowledgeid || index} className={styles.ackItem}>
                   <>
                     {parseMessage(ack.message)}
                     <div className={styles.ackHeader}>
-                      <span className={styles.ackUser}>{messageJson.grafanaUser && messageJson.grafanaUser}</span>
+                      <span className={styles.ackUser}>{parsedMessage.grafanaUser && parsedMessage.grafanaUser}</span>
                       <span className={styles.ackTime}>on {ack.time}</span>
                     </div>
-                    {messageJson.message && <div className={styles.ackMessage}>{messageJson.message}</div>}
+                    {parsedMessage.message && <div className={styles.ackMessage}>{parsedMessage.message}</div>}
                     {ack.action === '4' && <div className={styles.ackAction}>Acknowledged</div>}
                     {ack.action === '8' && (
                       <div className={styles.ackAction}>
