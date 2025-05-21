@@ -15,53 +15,90 @@ export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ proble
       return;
     }
 
+    // New headers to match Zabbix format
     const headers = [
-      'eventid',
-      'host',
-      'hostTechName',
-      'severity',
-      'name',
-      'opdata',
-      'timestamp',
-      'acknowledged',
-      'acknowledges',
-      'tags',
-      'groups',
-      'proxy',
+      'Severity',
+      'Time',
+      'Recovery time',
+      'Status',
+      'Host',
+      'Problem',
+      'Duration',
+      'Ack',
+      'Actions',
+      'Tags',
     ];
+
     const csvRows = [];
     csvRows.push(headers.join(','));
 
     for (const problem of problemsToRender) {
-      const values = headers.map((header) => {
-        let value = (problem as any)[header];
+      // Format timestamp to readable date
+      const formatTimestamp = (timestamp: number) => {
+        if (!timestamp) return '';
+        const date = new Date(timestamp * 1000); // Convert Unix timestamp to JS Date
+        return date.toLocaleDateString('en-US', {
+          month: 'numeric',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: false,
+        });
+      };
 
-        if (header === 'tags' && Array.isArray(value)) {
-          value = value.map((tag: { tag: string; value: string }) => `${tag.tag}:${tag.value}`).join(';');
-        } else if (header === 'groups' && Array.isArray(value)) {
-          value = value.map((group: { name: string }) => group.name).join(';');
-        } else if (header === 'acknowledges' && Array.isArray(value)) {
-          value = value
-            .map((ack: ZBXAcknowledge) => {
-              const userName = ack.name && ack.surname ? `${ack.name} ${ack.surname}` : ack.user || 'Unknown User';
-              const userIdentifier = ack.user && (ack.name || ack.surname) ? `${userName} (${ack.user})` : userName;
-              const message = ack.message || '';
-              return `${userIdentifier}: ${message}`;
-            })
-            .join(' | ');
-        } else if (typeof value === 'object' && value !== null) {
-          value = JSON.stringify(value);
+      // Determine status based on problem state
+      const status = problem.r_eventid ? 'RESOLVED' : 'PROBLEM';
+
+      // Format acknowledges for Actions column
+      let actions = '';
+      if (Array.isArray(problem.acknowledges) && problem.acknowledges.length > 0) {
+        const messageCount = problem.acknowledges.filter((ack) => ack.message && ack.message.trim() !== '').length;
+        if (messageCount > 0) {
+          actions += `Messages (${messageCount}), `;
+        }
+        actions += `Actions (${problem.acknowledges.length})`;
+        actions = actions.replace(/, $/, '');
+      }
+
+      // Format tags
+      let tagsFormatted = '';
+      if (Array.isArray(problem.tags) && problem.tags.length > 0) {
+        tagsFormatted = problem.tags.map((tag) => `${tag.tag}: ${tag.value}`).join(', ');
+      }
+
+      // Determine Ack status
+      const ack = problem.acknowledged === '1' ? 'Yes' : 'No';
+
+      // Format values for each row
+      const values = [
+        problem.severity, // Severity
+        formatTimestamp(problem.timestamp), // Time
+        problem.r_eventid ? formatTimestamp(problem.r_timestamp) : '', // Recovery time
+        status, // Status
+        problem.host, // Host
+        problem.name, // Problem
+        problem.duration || '', // Duration
+        ack, // Ack
+        actions, // Actions
+        tagsFormatted, // Tags
+      ];
+
+      // Format CSV string
+      const formattedValues = values.map((value) => {
+        if (value === null || value === undefined) return '';
+
+        let stringValue = String(value);
+        stringValue = stringValue.replace(/"/g, '""');
+
+        if (stringValue.includes(',')) {
+          return `"${stringValue}"`;
         }
 
-        if (typeof value === 'string') {
-          value = value.replace(/"/g, '""');
-          if (value.includes(',')) {
-            value = `"${value}"`;
-          }
-        }
-        return value !== undefined && value !== null ? value : '';
+        return stringValue;
       });
-      csvRows.push(values.join(','));
+
+      csvRows.push(formattedValues.join(','));
     }
 
     const csvString = csvRows.join('\n');
