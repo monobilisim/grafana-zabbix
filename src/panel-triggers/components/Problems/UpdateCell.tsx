@@ -109,8 +109,12 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     const name = user.name;
 
     let actions = 0;
+
     if (closeProblem) {
       actions |= 2;
+    }
+    if (message) {
+      actions |= 4;
     }
     if (suppressProblem) {
       actions |= 32;
