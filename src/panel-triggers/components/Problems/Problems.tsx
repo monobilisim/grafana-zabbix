@@ -564,8 +564,6 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     let problemsToRender = this.props.problems;
     const severityObject = scopeVariables.find((variable) => variable.name === 'Severity');
 
-    console.log(scopeVariables);
-
     if (severityObject) {
       // @ts-ignore
       selectedSeverityValues = severityObject.options

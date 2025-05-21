@@ -34,7 +34,7 @@ const severityLevels: Array<SelectableValue<string> & { className: string }> = [
 
 async function verialyazdir() {
   const backend = getBackendSrv();
-  const user = backend.fetch('/api/user');
+  const user = await backend.get('/api/user');
   console.log(user);
 }
 
