@@ -82,7 +82,6 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     }
   }, [unsuppressProblemDisabled, unsuppressProblem]);
 
-  const severityRadiosDisabled = !changeSeverity;
   const suppressTimeOptionsElementsDisabled = !suppressProblem;
   const suppressUntilInputDisabled = suppressTimeOptionsElementsDisabled || suppressTimeOption === '0';
 
@@ -113,20 +112,11 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     if (closeProblem) {
       actions |= 1;
     }
-    if (acknowledgeProblem) {
-      actions |= 2;
-    }
-    if (changeSeverity) {
-      actions |= 8;
-    }
     if (suppressProblem) {
       actions |= 32;
     }
     if (unsuppressProblem) {
       actions |= 64;
-    }
-    if (changeRank) {
-      actions |= 128;
     }
 
     if (actions === 0 && !message) {
