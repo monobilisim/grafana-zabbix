@@ -339,10 +339,6 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     </Tooltip>
   );
 
-  if (!isOpen) {
-    return null;
-  }
-
   return (
     <>
       <button onClick={(e) => setIsOpen(!isOpen)}>Update</button>
