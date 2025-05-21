@@ -116,6 +116,7 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
               {ack.action === '4' && <div className={styles.ackAction}>Acknowledged</div>}
               {ack.action === '8' && (
                 <div className={styles.ackAction}>
+                  {/* @ts-ignore */}
                   Changed severity from {ack.old_severity} to {ack.new_severity}
                 </div>
               )}

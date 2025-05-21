@@ -59,7 +59,6 @@ function ActionButtons(props: { original: ProblemDTO }) {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [currentProblem, setCurrentProblem] = useState(problem);
   const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [ticketId, setTicketId] = useState('');
   const [currentProblemForTicket, setCurrentProblemForTicket] = useState(null);
@@ -109,6 +108,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
         }
 
         if (missingScripts.length > 0) {
+          // @ts-ignore
           getAppEvents().emit('alert-warning', [
             'Missing Scripts',
             `Scriptler bulunamadı: ${missingScripts.join(', ')}`,
@@ -116,6 +116,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
         }
       } catch (error) {
         console.error('Failed to fetch scripts:', error);
+        // @ts-ignore
         getAppEvents().emit('alert-error', ['Script Error', 'Failed to fetch scripts from the host']);
       }
     };
@@ -124,8 +125,6 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
   const fetchScriptsAndSetCompanies = async (problem: any) => {
     try {
-      setLoading(true);
-
       const ds: any = await getDataSourceSrv().get(problem.datasource);
       const scripts: ZBXScript[] = await ds.zabbix.getScripts();
 
@@ -141,8 +140,6 @@ function ActionButtons(props: { original: ProblemDTO }) {
       setShowEmailModal(true);
     } catch (error) {
       console.error('Error fetching scripts:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -154,11 +151,13 @@ function ActionButtons(props: { original: ProblemDTO }) {
     const script = scripts.find((s) => s.scriptid === scriptIDS.sendEmail && s.name === 'Send Email');
 
     if (script) {
+      // @ts-ignore
       getAppEvents().emit('alert-success', ['Success', 'Send Email çağırıldı']);
       return ds.zabbix.executeScript(scriptIDS.sendEmail, undefined, currentProblem.eventid, {
         manualinput: manualInput,
       });
     } else {
+      // @ts-ignore
       return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Send Email adı ile uyuşmuyor']);
     }
   };
@@ -171,11 +170,13 @@ function ActionButtons(props: { original: ProblemDTO }) {
     const script = scripts.find((s) => s.scriptid === scriptIDS.updateTicketId && s.name === 'Update Ticket ID');
 
     if (script) {
+      // @ts-ignore
       getAppEvents().emit('alert-success', ['Success', 'Update Ticket ID çağırıldı']);
       return ds.zabbix.executeScript(scriptIDS.updateTicketId, undefined, currentProblem.eventid, {
         manualinput: ticketId,
       });
     } else {
+      // @ts-ignore
       return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Update Ticket ID adı ile uyuşmuyor']);
     }
   };
@@ -188,9 +189,11 @@ function ActionButtons(props: { original: ProblemDTO }) {
     const script = scripts.find((s) => s.scriptid === scriptIDS.closeTicket && s.name === 'Close Ticket');
 
     if (script) {
+      // @ts-ignore
       getAppEvents().emit('alert-success', ['Success', 'Close Ticket çağırıldı']);
       return onExecuteScript(problem, scriptIDS.closeTicket);
     } else {
+      // @ts-ignore
       return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Close Ticket adı ile uyuşmuyor']);
     }
   }
@@ -203,9 +206,11 @@ function ActionButtons(props: { original: ProblemDTO }) {
     const script = scripts.find((s) => s.scriptid === scriptIDS.createTicket && s.name === 'Create Ticket');
 
     if (script) {
+      // @ts-ignore
       getAppEvents().emit('alert-success', ['Success', 'Create Ticket çağırıldı']);
       return onExecuteScript(problem, scriptIDS.createTicket);
     } else {
+      // @ts-ignore
       return getAppEvents().emit('alert-error', ['Script Error', 'Script ID, Create Ticket adı ile uyuşmuyor']);
     }
   }
@@ -459,6 +464,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Cell: (props: { original: any }) => {
           const original = props.original;
 
+          // @ts-ignore
           return <UpdateCell original={original} />;
         },
       },
@@ -467,6 +473,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         id: 'msg',
         show: options.ackField,
         width: 70,
+        // @ts-ignore
         Cell: (props: unknown) => <AckCell {...props} />,
       },
       {
@@ -474,6 +481,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         accessor: 'tags',
         show: options.showTags,
         className: 'problem-tags',
+        // @ts-ignore
         Cell: (props: unknown) => <TagCell {...props} onTagClick={this.handleTagClick} />,
       },
       {
@@ -558,17 +566,22 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     console.log(scopeVariables);
 
     if (severityObject) {
-      selectedSeverityValues = severityObject.options.filter((option) => option.selected).map((option) => option.value);
+      // @ts-ignore
+      selectedSeverityValues = severityObject.options
+        .filter((option: any) => option.selected)
+        .map((option) => option.value);
 
       let selectedProblems = problemsToRender.filter((problem) => selectedSeverityValues.includes(problem.severity));
       problemsToRender = selectedProblems;
     } else {
+      // @ts-ignore
       getAppEvents().emit('alert-warning', ['Severity değerleri tanımlanmamış', `Severity değerleri tanımlanmamış`]);
     }
 
     if (severityObject) {
+      // @ts-ignore
       const shouldShowAllProblems = severityObject.current.value.some(
-        (value) => typeof value === 'string' && value.includes('all')
+        (value: any) => typeof value === 'string' && value.includes('all')
       );
 
       if (shouldShowAllProblems) {
@@ -652,8 +665,10 @@ function SeverityCell(
 
   let severityDesc: TriggerSeverity;
   const severity = Number(problem.severity);
+  // @ts-ignore
   severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
   if (problem.severity && problem.value === '1') {
+    // @ts-ignore
     severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
   }
 

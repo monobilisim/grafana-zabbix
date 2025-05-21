@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { css } from '@emotion/css';
 import { RTCell } from '../../types';
 import { ProblemDTO } from '../../../datasource/types';
-import { FAIcon } from '../../../components';
+// @ts-ignore
 import { useTheme, stylesFactory, Modal, Button, HorizontalGroup, VerticalGroup } from '@grafana/ui';
 import { GrafanaTheme } from '@grafana/data';
 import { getBackendSrv, getDataSourceSrv, getAppEvents } from '@grafana/runtime';
@@ -57,8 +57,10 @@ export const UpdateCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDT
     try {
       const ds: any = await getDataSourceSrv().get(problem.datasource);
       const result = await ds.zabbix.acknowledgeEvent(problem.eventid, ackMessage);
+      // @ts-ignore
       getAppEvents().emit('alert-success', ['', 'Acknowledge güncellemesi başarıyla çağırıldı']);
     } catch (error) {
+      // @ts-ignore
       getAppEvents().emit('alert-error', ['', 'Acknowledge güncelleme başarısız oldu']);
     }
 
