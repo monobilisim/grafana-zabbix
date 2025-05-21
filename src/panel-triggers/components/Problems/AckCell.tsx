@@ -36,7 +36,6 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
     setMessageJson(parsed);
   }
 
-  // Prevent modal from closing when clicking inside it
   const handleModalClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
@@ -61,7 +60,7 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                   <>
                     {parseMessage(ack.message)}
                     <div className={styles.ackHeader}>
-                      <span className={styles.ackUser}>{messageJson.grafanaUser}</span>
+                      <span className={styles.ackUser}>{messageJson.grafanaUser && messageJson.grafanaUser}</span>
                       <span className={styles.ackTime}>on {ack.time}</span>
                     </div>
                     {messageJson.message && <div className={styles.ackMessage}>{messageJson.message}</div>}
