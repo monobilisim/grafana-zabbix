@@ -102,7 +102,7 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
       gap: ${theme.spacing.xs};
       li {
         padding: ${theme.spacing.xs};
-        border-radius: ${theme.shape.borderRadius(1)};
+        border-radius: 4px; // Changed to pure CSS
         input[type='radio'] {
           margin-right: ${theme.spacing.sm};
         }
@@ -160,7 +160,7 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
       min-height: 80px;
       background-color: ${theme.colors.formInputBg};
       border: 1px solid ${theme.colors.formInputBorder};
-      border-radius: ${theme.shape.borderRadius(1)};
+      border-radius: 4px; // Changed to pure CSS
       color: ${theme.colors.formInputText};
       padding: ${theme.spacing.sm};
       &:focus {
