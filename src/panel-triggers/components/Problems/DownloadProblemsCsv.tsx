@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProblemDTO } from '../../../datasource/types';
+import { ProblemDTO, ZBXAcknowledge } from '../../../datasource/types';
 import { getAppEvents } from '@grafana/runtime';
 import { Button } from '@grafana/ui';
 
@@ -41,7 +41,14 @@ export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ proble
         } else if (header === 'groups' && Array.isArray(value)) {
           value = value.map((group: { name: string }) => group.name).join(';');
         } else if (header === 'acknowledges' && Array.isArray(value)) {
-          value = value.map((ack: { alias: string; message: string }) => `${ack.alias}: ${ack.message}`).join(' | ');
+          value = value
+            .map((ack: ZBXAcknowledge) => {
+              const userName = ack.name && ack.surname ? `${ack.name} ${ack.surname}` : ack.user || 'Unknown User';
+              const userIdentifier = ack.user && (ack.name || ack.surname) ? `${userName} (${ack.user})` : userName;
+              const message = ack.message || '';
+              return `${userIdentifier}: ${message}`;
+            })
+            .join(' | ');
         } else if (typeof value === 'object' && value !== null) {
           value = JSON.stringify(value);
         }
