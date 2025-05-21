@@ -343,7 +343,12 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     <>
       <button onClick={(e) => setIsOpen(!isOpen)}>Update</button>
 
-      <Modal isOpen={isOpen} title="Update Problem">
+      <Modal
+        isOpen={isOpen}
+        onDismiss={() => setIsOpen(false)}
+        onClickBackdrop={() => setIsOpen(false)}
+        title="Update Problem"
+      >
         <div className={styles.modalContent}>
           <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
             <ul className={styles.tableForms}>
@@ -578,7 +583,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
             </ul>
           </form>
           <HorizontalGroup justify="flex-end" spacing="md" style={{ marginTop: theme.spacing.md }}>
-            <Button variant="secondary" disabled={isSubmitting}>
+            <Button variant="secondary" disabled={isSubmitting} onClick={(e) => setIsOpen(false)}>
               Cancel
             </Button>
             <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
