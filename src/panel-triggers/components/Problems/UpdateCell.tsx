@@ -113,9 +113,8 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     if (closeProblem) {
       actions |= 2;
     }
-    if (message) {
-      actions |= 4;
-    }
+    // Grafana User'ı mesajda içerdiğimiz için her istek mesaj bulunduruyor
+    actions |= 4;
     if (suppressProblem) {
       actions |= 32;
     }
