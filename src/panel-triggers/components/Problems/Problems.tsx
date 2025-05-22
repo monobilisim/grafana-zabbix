@@ -524,6 +524,17 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         width: 100,
         sortable: true,
         filterable: false,
+        acessor: (props: { original: any }) => {
+          const problem = props.original;
+          const tags = problem.tags || [];
+          let ticketId = 0;
+          tags.forEach((tag) => {
+            if (tag.tag === 'TicketId') {
+              ticketId = Number(tag.value);
+            }
+          });
+          return ticketId;
+        },
         Cell: (props: { original: any }) => {
           const original = props.original;
 
@@ -563,6 +574,8 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     let selectedSeverityValues: string[] = [];
     let problemsToRender = this.props.problems;
     const severityObject = scopeVariables.find((variable) => variable.name === 'Severity');
+
+    console.log(this.props.problems);
 
     if (severityObject) {
       // @ts-ignore
