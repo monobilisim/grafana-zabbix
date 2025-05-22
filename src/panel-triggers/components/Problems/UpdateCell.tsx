@@ -280,14 +280,14 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
 export default UpdateCell;
 
-const getStyles = (theme: GrafanaTheme2) => {
+const getStyles = () => {
   return {
     modalContent: css`
       width: 650px;
-      color: ${theme.colors.text};
+      color: #d8d9da;
     `,
     form: css`
-      font-size: ${theme.typography.size.sm};
+      font-size: 14px;
     `,
     tableForms: css`
       list-style: none;
@@ -305,7 +305,7 @@ const getStyles = (theme: GrafanaTheme2) => {
     tableFormsTdLeft: css`
       width: 150px;
       padding-right: 16px;
-      font-weight: ${theme.typography.fontWeightMedium};
+      font-weight: 500;
       display: flex;
       align-items: flex-start;
       padding-top: 4px;
@@ -323,7 +323,7 @@ const getStyles = (theme: GrafanaTheme2) => {
       width: 100%;
       border-collapse: collapse;
       margin-top: 4px;
-      font-size: ${theme.typography.size.xs};
+      font-size: 12px;
       th,
       td {
         border: 1px solid #555555;
@@ -331,7 +331,7 @@ const getStyles = (theme: GrafanaTheme2) => {
         text-align: left;
       }
       th {
-        background-color: ${theme.colors.background.secondary};
+        background-color: #22252b;
       }
     `,
     listCheckRadio: css`
@@ -362,32 +362,32 @@ const getStyles = (theme: GrafanaTheme2) => {
     `,
     formInputMargin: css`
       margin-left: 16px;
-      font-size: ${theme.typography.size.xs};
-      color: ${theme.colors.text.secondary};
+      font-size: 12px;
+      color: #9fa7b3;
     `,
     helpButton: css`
       background: none;
       border: none;
-      color: ${theme.colors.text.link};
+      color: #6e9fff;
       cursor: pointer;
       padding: 0 4px;
-      font-size: ${theme.typography.size.md};
+      font-size: 16px;
     `,
     asteriskMessage: css`
-      color: ${theme.colors.text.secondary};
-      font-size: ${theme.typography.size.xs};
+      color: #9fa7b3;
+      font-size: 12px;
       margin-top: 8px;
     `,
     textarea: css`
       width: 100%;
       min-height: 80px;
-      background-color: ${theme.components.input.background};
+      background-color: #181b1f;
       border: 1px solid #555555;
       border-radius: 4px;
-      color: ${theme.components.input.text};
+      color: #d8d9da;
       padding: 8px;
       &:focus {
-        border-color: ${theme.colors.primary.border};
+        border-color: #5794f2;
         outline: none;
       }
     `,
