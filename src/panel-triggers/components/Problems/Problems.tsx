@@ -524,7 +524,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         width: 100,
         sortable: true,
         filterable: false,
-        acessor: (props: { original: any }) => {
+        accessor: (props: { original: any }) => {
           const problem = props.original;
           const tags = problem.tags || [];
           let ticketId = 0;
