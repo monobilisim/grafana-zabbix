@@ -1,41 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { css, cx } from '@emotion/css';
-// @ts-ignore
 import {
   useTheme,
-  stylesFactory,
+  useStyles2,
   Modal,
   Button,
-  HorizontalGroup,
-  VerticalGroup,
+  Stack,
   Input,
   TextArea,
   RadioButtonGroup,
   Checkbox,
   Tooltip,
+  DateTimePicker,
 } from '@grafana/ui';
-// @ts-ignore
-import { GrafanaTheme, SelectableValue } from '@grafana/data';
+import { GrafanaTheme2, SelectableValue, dateTime, DateTime } from '@grafana/data';
 import { ProblemDTO } from '../../../datasource/types';
-import { getDataSourceSrv, getAppEvents, getBackendSrv } from '@grafana/runtime'; // Added imports
+import { getDataSourceSrv, getAppEvents, getBackendSrv } from '@grafana/runtime';
 
 interface UpdateCellProps {
   problem: ProblemDTO;
-}
-
-const severityLevels: Array<SelectableValue<string> & { className: string }> = [
-  { label: 'Not classified', value: '0', className: 'severityNa' },
-  { label: 'Information', value: '1', className: 'severityInfo' },
-  { label: 'Warning', value: '2', className: 'severityWarning' },
-  { label: 'Average', value: '3', className: 'severityAverage' },
-  { label: 'High', value: '4', className: 'severityHigh' },
-  { label: 'Disaster', value: '5', className: 'severityDisaster' },
-];
-
-async function verialyazdir() {
-  const backend = getBackendSrv();
-  const user = await backend.get('/api/user');
-  console.log(user);
 }
 
 export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
@@ -43,29 +26,13 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
   const styles = getStyles(theme);
 
   const [message, setMessage] = useState('');
-  const [scope, setScope] = useState<string>('0');
-  const [changeSeverity, setChangeSeverity] = useState(false);
-  const [currentSeverity, setCurrentSeverity] = useState<string>('0');
   const [suppressProblem, setSuppressProblem] = useState(false);
   const [suppressTimeOption, setSuppressTimeOption] = useState<string>('1');
-  const [suppressUntilProblem, setSuppressUntilProblem] = useState('now+1d');
+  const [suppressUntilProblem, setSuppressUntilProblem] = useState<DateTime | null>(null);
   const [unsuppressProblem, setUnsuppressProblem] = useState(false);
-  const [acknowledgeProblem, setAcknowledgeProblem] = useState(false);
-  const [changeRank, setChangeRank] = useState(false);
   const [closeProblem, setCloseProblem] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-
-  // if (problem.isSuppressible !== null) {
-  //   const isProblemSuppressible = problem.isSuppressible !== false;
-  // }
-
-  // if (problem.isUnsuppressible !== null) {
-  //   const isProblemUnsuppressible = problem.isUnsuppressible !== false;
-  // }
-
-  // const suppressProblemDisabled = !isProblemSuppressible || closeProblem || unsuppressProblem;
-  // const unsuppressProblemDisabled = !isProblemUnsuppressible || closeProblem || suppressProblem;
 
   const suppressProblemDisabled = closeProblem || unsuppressProblem;
   const unsuppressProblemDisabled = closeProblem || suppressProblem;
@@ -88,15 +55,10 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
   useEffect(() => {
     if (isOpen) {
       setMessage('');
-      setScope('0');
-      setChangeSeverity(false);
-      setCurrentSeverity('0');
       setSuppressProblem(false);
       setSuppressTimeOption('1');
-      setSuppressUntilProblem('now+1');
+      setSuppressUntilProblem(null);
       setUnsuppressProblem(false);
-      setAcknowledgeProblem(false);
-      setChangeRank(false);
       setCloseProblem(false);
     }
   }, [isOpen]);
@@ -148,8 +110,11 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
       const resString = JSON.stringify({ grafanaUser: name, message: message });
 
+      // Convert DateTime to the expected format for the API
+      const formattedDate = suppressUntilProblem ? suppressUntilProblem.format('YYYY-MM-DD HH:mm:ss') : '';
+
       const params = {
-        ...(suppressProblem ? { suppress_time_option: 1, suppress_until_problem: suppressUntilProblem } : {}),
+        ...(suppressProblem ? { suppress_time_option: 1, suppress_until: formattedDate } : {}),
       };
 
       await ds.zabbix.acknowledgeEvent(problem.eventid, resString, actions, undefined, params);
@@ -233,7 +198,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
                   </div>
                 </div>
                 <div className={styles.tableFormsTdRight}>
-                  <HorizontalGroup spacing="md" align="flex-start" wrap>
+                  <Stack spacing="md" direction="row" alignItems="flex-start" wrap>
                     <Checkbox
                       id="suppress_problem_cb"
                       value={suppressProblem}
@@ -249,15 +214,12 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
                       onChange={setSuppressTimeOption}
                       disabled={suppressTimeOptionsElementsDisabled}
                     />
-                    <Input
-                      type="text"
-                      id="suppress_until_problem_input"
-                      value={suppressUntilProblem}
-                      onChange={(e) => setSuppressUntilProblem(e.currentTarget.value)}
-                      placeholder="now+1d"
-                      disabled={suppressUntilInputDisabled}
+                    <DateTimePicker
+                      date={suppressUntilProblem}
+                      onChange={(date) => setSuppressUntilProblem(date)}
+                      placeholder="Select date and time"
                     />
-                  </HorizontalGroup>
+                  </Stack>
                 </div>
               </li>
 
@@ -302,14 +264,14 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
               </li>
             </ul>
           </form>
-          <HorizontalGroup justify="flex-end" spacing="md" style={{ marginTop: theme.spacing.md }}>
+          <Stack justifyContent="flex-end" gap="md" style={{ marginTop: theme.spacing.md }}>
             <Button variant="secondary" disabled={isSubmitting} onClick={(e) => setIsOpen(false)}>
               Cancel
             </Button>
             <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
               {isSubmitting ? 'Updating...' : 'Update'}
             </Button>
-          </HorizontalGroup>
+          </Stack>
         </div>
       </Modal>
     </>
@@ -318,26 +280,11 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
 export default UpdateCell;
 
-const getStyles = stylesFactory((theme: GrafanaTheme) => {
-  const zabbixColors = {
-    naBg: theme.colors.bg2, // Not Classified
-    infoBg: theme.palette.blue95, // Information
-    warningBg: theme.palette.yellow, // Warning
-    averageBg: theme.palette.orange, // Average
-    highBg: theme.palette.red, // High
-    disasterBg: theme.palette.purple, // Disaster
-    textDark: theme.colors.text,
-    textLight: theme.colors.textStrong,
-    border: theme.colors.border1,
-    inputBg: theme.colors.formInputBg,
-    buttonPrimaryBg: theme.colors.primary,
-    buttonPrimaryText: theme.colors.primaryContrast,
-  };
-
+const getStyles = (theme: GrafanaTheme2) => {
   return {
     modalContent: css`
       width: 650px;
-      color: ${zabbixColors.textDark};
+      color: ${theme.colors.text};
     `,
     form: css`
       font-size: ${theme.typography.size.sm};
@@ -349,19 +296,19 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
     `,
     tableFormsLi: css`
       display: flex;
-      padding: ${theme.spacing.sm} 0;
-      border-bottom: 1px solid ${zabbixColors.border};
+      padding: ${theme.spacing(1)} 0;
+      border-bottom: 1px solid ${theme.colors.border.medium};
       &:last-child {
         border-bottom: none;
       }
     `,
     tableFormsTdLeft: css`
       width: 150px;
-      padding-right: ${theme.spacing.md};
+      padding-right: ${theme.spacing(2)};
       font-weight: ${theme.typography.fontWeightMedium};
       display: flex;
-      align-items: flex-start; // Align with top of input
-      padding-top: ${theme.spacing.xs}; // Adjust for alignment
+      align-items: flex-start;
+      padding-top: ${theme.spacing(0.5)};
     `,
     tableFormsTdRight: css`
       flex: 1;
@@ -370,21 +317,21 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
     `,
     wordbreak: css`
       word-break: break-all;
-      padding-top: ${theme.spacing.xs};
+      padding-top: ${theme.spacing(0.5)};
     `,
     historyTable: css`
       width: 100%;
       border-collapse: collapse;
-      margin-top: ${theme.spacing.xs};
+      margin-top: ${theme.spacing(0.5)};
       font-size: ${theme.typography.size.xs};
       th,
       td {
-        border: 1px solid ${zabbixColors.border};
-        padding: ${theme.spacing.xs};
+        border: 1px solid ${theme.colors.border.medium};
+        padding: ${theme.spacing(0.5)};
         text-align: left;
       }
       th {
-        background-color: ${theme.colors.bg2};
+        background-color: ${theme.colors.background.secondary};
       }
     `,
     listCheckRadio: css`
@@ -392,87 +339,64 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
       padding: 0;
       margin: 0;
       li {
-        margin-bottom: ${theme.spacing.xs};
+        margin-bottom: ${theme.spacing(0.5)};
       }
     `,
     severityList: css`
       display: flex;
       flex-direction: column;
-      gap: ${theme.spacing.xs};
+      gap: ${theme.spacing(0.5)};
       li {
-        padding: ${theme.spacing.xs};
-        border-radius: 4px; // Changed to pure CSS
+        padding: ${theme.spacing(0.5)};
+        border-radius: 4px;
         input[type='radio'] {
-          margin-right: ${theme.spacing.sm};
+          margin-right: ${theme.spacing(1)};
         }
       }
-    `,
-    severityNa: css`
-      background-color: ${zabbixColors.naBg};
-    `,
-    severityInfo: css`
-      background-color: ${zabbixColors.infoBg};
-      color: ${zabbixColors.textLight};
-    `,
-    severityWarning: css`
-      background-color: ${zabbixColors.warningBg};
-      color: ${zabbixColors.textDark};
-    `,
-    severityAverage: css`
-      background-color: ${zabbixColors.averageBg};
-      color: ${zabbixColors.textLight};
-    `,
-    severityHigh: css`
-      background-color: ${zabbixColors.highBg};
-      color: ${zabbixColors.textLight};
-    `,
-    severityDisaster: css`
-      background-color: ${zabbixColors.disasterBg};
-      color: ${zabbixColors.textLight};
     `,
     horList: css`
       display: flex;
       align-items: center;
-      gap: ${theme.spacing.sm};
-      flex-wrap: wrap; // Allow wrapping
+      gap: ${theme.spacing(1)};
+      flex-wrap: wrap;
     `,
     formInputMargin: css`
-      margin-left: ${theme.spacing.md};
+      margin-left: ${theme.spacing(2)};
       font-size: ${theme.typography.size.xs};
-      color: ${theme.colors.textWeak};
+      color: ${theme.colors.text.secondary};
     `,
     helpButton: css`
       background: none;
       border: none;
-      color: ${theme.colors.textBlue};
+      color: ${theme.colors.text.link};
       cursor: pointer;
-      padding: 0 ${theme.spacing.xs};
-      font-size: ${theme.typography.size.md}; // Make icon a bit larger
+      padding: 0 ${theme.spacing(0.5)};
+      font-size: ${theme.typography.size.md};
     `,
     asteriskMessage: css`
-      color: ${theme.colors.textSemiWeak};
+      color: ${theme.colors.text.secondary};
       font-size: ${theme.typography.size.xs};
-      margin-top: ${theme.spacing.sm};
+      margin-top: ${theme.spacing(1)};
     `,
     textarea: css`
       width: 100%;
       min-height: 80px;
-      background-color: ${theme.colors.formInputBg};
-      border: 1px solid ${theme.colors.formInputBorder};
-      border-radius: 4px; // Changed to pure CSS
-      color: ${theme.colors.formInputText};
-      padding: ${theme.spacing.sm};
+      background-color: ${theme.components.input.background};
+      border: 1px solid ${theme.components.input.borderColor};
+      border-radius: 4px;
+      color: ${theme.components.input.text};
+      padding: ${theme.spacing(1)};
       &:focus {
-        border-color: ${theme.colors.formInputFocus};
+        border-color: ${theme.colors.primary.border};
         outline: none;
       }
     `,
     checkboxRadio: css`
-      margin-right: ${theme.spacing.xs};
+      margin-right: ${theme.spacing(0.5)};
     `,
     labelWithHelp: css`
       display: flex;
       align-items: center;
     `,
   };
-});
+};
