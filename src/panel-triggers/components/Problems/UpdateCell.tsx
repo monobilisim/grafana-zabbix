@@ -296,7 +296,7 @@ const getStyles = (theme: GrafanaTheme2) => {
     `,
     tableFormsLi: css`
       display: flex;
-      padding: ${theme.spacing(1)} 0;
+      padding: 8px 0;
       border-bottom: 1px solid ${theme.colors.border.medium};
       &:last-child {
         border-bottom: none;
@@ -304,11 +304,11 @@ const getStyles = (theme: GrafanaTheme2) => {
     `,
     tableFormsTdLeft: css`
       width: 150px;
-      padding-right: ${theme.spacing(2)};
+      padding-right: 16px;
       font-weight: ${theme.typography.fontWeightMedium};
       display: flex;
       align-items: flex-start;
-      padding-top: ${theme.spacing(0.5)};
+      padding-top: 4px;
     `,
     tableFormsTdRight: css`
       flex: 1;
@@ -317,17 +317,17 @@ const getStyles = (theme: GrafanaTheme2) => {
     `,
     wordbreak: css`
       word-break: break-all;
-      padding-top: ${theme.spacing(0.5)};
+      padding-top: 4px;
     `,
     historyTable: css`
       width: 100%;
       border-collapse: collapse;
-      margin-top: ${theme.spacing(0.5)};
+      margin-top: 4px;
       font-size: ${theme.typography.size.xs};
       th,
       td {
         border: 1px solid ${theme.colors.border.medium};
-        padding: ${theme.spacing(0.5)};
+        padding: 4px;
         text-align: left;
       }
       th {
@@ -339,29 +339,29 @@ const getStyles = (theme: GrafanaTheme2) => {
       padding: 0;
       margin: 0;
       li {
-        margin-bottom: ${theme.spacing(0.5)};
+        margin-bottom: 4px;
       }
     `,
     severityList: css`
       display: flex;
       flex-direction: column;
-      gap: ${theme.spacing(0.5)};
+      gap: 4px;
       li {
-        padding: ${theme.spacing(0.5)};
+        padding: 4px;
         border-radius: 4px;
         input[type='radio'] {
-          margin-right: ${theme.spacing(1)};
+          margin-right: 8px;
         }
       }
     `,
     horList: css`
       display: flex;
       align-items: center;
-      gap: ${theme.spacing(1)};
+      gap: 8px;
       flex-wrap: wrap;
     `,
     formInputMargin: css`
-      margin-left: ${theme.spacing(2)};
+      margin-left: 16px;
       font-size: ${theme.typography.size.xs};
       color: ${theme.colors.text.secondary};
     `,
@@ -370,13 +370,13 @@ const getStyles = (theme: GrafanaTheme2) => {
       border: none;
       color: ${theme.colors.text.link};
       cursor: pointer;
-      padding: 0 ${theme.spacing(0.5)};
+      padding: 0 4px;
       font-size: ${theme.typography.size.md};
     `,
     asteriskMessage: css`
       color: ${theme.colors.text.secondary};
       font-size: ${theme.typography.size.xs};
-      margin-top: ${theme.spacing(1)};
+      margin-top: 8px;
     `,
     textarea: css`
       width: 100%;
@@ -385,14 +385,14 @@ const getStyles = (theme: GrafanaTheme2) => {
       border: 1px solid ${theme.components.input.borderColor};
       border-radius: 4px;
       color: ${theme.components.input.text};
-      padding: ${theme.spacing(1)};
+      padding: 8px;
       &:focus {
         border-color: ${theme.colors.primary.border};
         outline: none;
       }
     `,
     checkboxRadio: css`
-      margin-right: ${theme.spacing(0.5)};
+      margin-right: 4px;
     `,
     labelWithHelp: css`
       display: flex;
