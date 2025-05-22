@@ -297,7 +297,7 @@ const getStyles = (theme: GrafanaTheme2) => {
     tableFormsLi: css`
       display: flex;
       padding: 8px 0;
-      border-bottom: 1px solid ${theme.colors.border.medium};
+      border-bottom: 1px solid #555555;
       &:last-child {
         border-bottom: none;
       }
@@ -326,7 +326,7 @@ const getStyles = (theme: GrafanaTheme2) => {
       font-size: ${theme.typography.size.xs};
       th,
       td {
-        border: 1px solid ${theme.colors.border.medium};
+        border: 1px solid #555555;
         padding: 4px;
         text-align: left;
       }
@@ -382,7 +382,7 @@ const getStyles = (theme: GrafanaTheme2) => {
       width: 100%;
       min-height: 80px;
       background-color: ${theme.components.input.background};
-      border: 1px solid ${theme.components.input.borderColor};
+      border: 1px solid #555555;
       border-radius: 4px;
       color: ${theme.components.input.text};
       padding: 8px;
