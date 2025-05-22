@@ -524,16 +524,18 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         width: 100,
         sortable: true,
         filterable: false,
-        accessor: (props: { original: any }) => {
-          const problem = props.original;
+        accessor: (problem: any) => {
           const tags = problem.tags || [];
-          let ticketId = 0;
-          tags.forEach((tag) => {
+          let ticketIdValue: number | string = '';
+
+          for (const tag of tags) {
             if (tag.tag === 'TicketId') {
-              ticketId = Number(tag.value);
+              ticketIdValue = Number(tag.value);
+              break;
             }
-          });
-          return ticketId;
+          }
+
+          return ticketIdValue;
         },
         Cell: (props: { original: any }) => {
           const original = props.original;
