@@ -28,6 +28,7 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
   const theme = useTheme();
   const styles = getStyles(theme);
   const [modalOpen, setModalOpen] = useState(false);
+  console.log(problem);
 
   const handleModalClick = (e: React.MouseEvent) => {
     e.stopPropagation();

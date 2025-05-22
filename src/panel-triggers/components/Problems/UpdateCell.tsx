@@ -111,14 +111,15 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     let actions = 0;
 
     if (closeProblem) {
-      actions |= 1; // acknowledge
-      actions |= 2; // close problem
+      actions |= 1; // close problem
+      actions |= 2; // acknowledge
     }
     // Grafana User'ı mesajda içerdiğimiz için her istek mesaj bulunduruyor
     actions |= 4; // message
     if (suppressProblem) {
-      actions |= 1; // acknowledge
-      actions |= 32; // supress
+      //actions |= 2; // acknowledge
+      actions -= 4; // suppress doesn't like message to be added
+      actions |= 32; // suppress
     }
     if (unsuppressProblem) {
       actions |= 64;
