@@ -110,11 +110,10 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
       const resString = JSON.stringify({ grafanaUser: name, message: message });
 
-      // Convert DateTime to the expected format for the API
-      const formattedDate = suppressUntilProblem ? suppressUntilProblem.format('YYYY-MM-DD HH:mm:ss') : '';
+      const unixEpoch = suppressUntilProblem ? Math.floor(suppressUntilProblem.valueOf() / 1000) : 0;
 
       const params = {
-        ...(suppressProblem ? { suppress_time_option: 1, suppress_until: formattedDate } : {}),
+        ...(suppressProblem ? { suppress_until: unixEpoch } : {}),
       };
 
       await ds.zabbix.acknowledgeEvent(problem.eventid, resString, actions, undefined, params);
