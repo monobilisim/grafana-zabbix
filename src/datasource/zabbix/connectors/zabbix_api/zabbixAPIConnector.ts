@@ -501,7 +501,6 @@ export class ZabbixAPIConnector {
       hostids,
       applicationids,
       recent,
-      show_suppressed: 1,
     };
 
     if (severities) {
