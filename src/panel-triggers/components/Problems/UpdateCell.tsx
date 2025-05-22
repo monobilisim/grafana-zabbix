@@ -93,7 +93,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
       setCurrentSeverity('0');
       setSuppressProblem(false);
       setSuppressTimeOption('1');
-      setSuppressUntilProblem('now+1d');
+      setSuppressUntilProblem('now+1');
       setUnsuppressProblem(false);
       setAcknowledgeProblem(false);
       setChangeRank(false);
@@ -117,7 +117,8 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     // Grafana User'ı mesajda içerdiğimiz için her istek mesaj bulunduruyor
     actions |= 4; // message
     if (suppressProblem) {
-      actions |= 32;
+      actions |= 1; // acknowledge
+      actions |= 32; // supress
     }
     if (unsuppressProblem) {
       actions |= 64;
@@ -146,7 +147,9 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
       const resString = JSON.stringify({ grafanaUser: name, message: message });
 
-      const params = {};
+      const params = {
+        ...(suppressProblem ? { suppress_time_option: 1, suppress_until_problem: suppressUntilProblem } : {}),
+      };
 
       await ds.zabbix.acknowledgeEvent(problem.eventid, resString, actions, undefined, params);
 
