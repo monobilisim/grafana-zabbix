@@ -67,12 +67,12 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                       </div>
                     )}
                     {ack.action === '32' &&
-                      (parseInt(ack.suppress_until) !== 0 ? (
+                      (parseInt(ack.suppress_until) === 0 ? (
+                        <div className={styles.ackAction}>Suppressed indefinitely</div>
+                      ) : (
                         <div className={styles.ackAction}>
                           Suppressed until {new Date(parseInt(ack.suppress_until) * 1000).toLocaleString()}
                         </div>
-                      ) : (
-                        <div className={styles.ackAction}>Suppressed indefinitely</div>
                       ))}
                     {ack.action === '64' && <div className={styles.ackAction}>Unsuppressed the problem</div>}
                   </>
@@ -94,11 +94,14 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                     Changed severity from {ack.old_severity} to {ack.new_severity}
                   </div>
                 )}
-                {ack.action === '32' && (
-                  <div className={styles.ackAction}>
-                    Suppressed until {new Date(parseInt(ack.suppress_until) * 1000).toLocaleString()}
-                  </div>
-                )}
+                {ack.action === '32' &&
+                  (parseInt(ack.suppress_until) === 0 ? (
+                    <div className={styles.ackAction}>Suppressed indefinitely</div>
+                  ) : (
+                    <div className={styles.ackAction}>
+                      Suppressed until {new Date(parseInt(ack.suppress_until) * 1000).toLocaleString()}
+                    </div>
+                  ))}
                 {ack.action === '64' && <div className={styles.ackAction}>Unsuppressed the problem</div>}
               </div>
             );
