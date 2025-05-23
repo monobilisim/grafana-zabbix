@@ -1,6 +1,6 @@
 import React from 'react';
 import { ProblemDTO, ZBXAcknowledge } from '../../../datasource/types';
-import { getAppEvents, getTemplateSrv } from '@grafana/runtime';
+import { getAppEvents, getBackendSrv() } from '@grafana/runtime';
 import { Button } from '@grafana/ui';
 
 interface DownloadProblemsCsvProps {
@@ -9,7 +9,7 @@ interface DownloadProblemsCsvProps {
 
 export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ problemsToRender }) => {
   const handleDownloadCsv = () => {
-    const variables = getTemplateSrv();
+    const variables = getBackendSrv();
     console.log(variables);
 
     if (!problemsToRender || problemsToRender.length === 0) {
