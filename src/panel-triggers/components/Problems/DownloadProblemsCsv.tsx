@@ -66,7 +66,7 @@ export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ proble
         status = 'PROBLEM';
       }
 
-      if (problem.manual_close === '1' && problem.value !== '1') {
+      if (problem.manual_close === '1' && problem.value !== '0') {
         status = 'RESOLVED';
       }
 
