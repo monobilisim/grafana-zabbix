@@ -21,6 +21,13 @@ import { TicketModal } from './UpdateTicketModal';
 import { UpdateCell } from './UpdateCell';
 import { DownloadProblemsCsv } from './DownloadProblemsCsv';
 
+// Extended interface to identify problems that should be displayed as resolved
+// When a problem is part of a problem chain (same triggerid), only the newest one
+// should display as PROBLEM, the older ones will display as RESOLVED
+interface ExtendedProblemDTO extends ProblemDTO {
+  displayResolved?: boolean;
+}
+
 const currentProblem = React.createContext<ProblemDTO | null>(null);
 
 const onExecuteScript = async (
@@ -339,6 +346,59 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     this.rootRef = ref;
   };
 
+  getProcessedProblems(problems: ProblemDTO[]): ExtendedProblemDTO[] {
+    if (!problems || problems.length === 0) {
+      return [];
+    }
+
+    const problemsByTriggerId: { [triggerid: string]: ProblemDTO[] } = {};
+    for (const problem of problems) {
+      if (!problemsByTriggerId[problem.triggerid]) {
+        problemsByTriggerId[problem.triggerid] = [];
+      }
+      problemsByTriggerId[problem.triggerid].push(problem);
+    }
+
+    // Create ExtendedProblemDTO array, preserving original order
+    const processedProblems: ExtendedProblemDTO[] = problems.map((p) => ({
+      ...p,
+      displayResolved: false, // Default to false
+    }));
+
+    // Create a map from eventid to index in processedProblems for efficient updates
+    const eventIdToIndexMap: Map<string, number> = new Map();
+    processedProblems.forEach((p, index) => {
+      // Ensure eventid exists and is a string
+      if (p.eventid) {
+        eventIdToIndexMap.set(String(p.eventid), index);
+      }
+    });
+
+    for (const triggerid in problemsByTriggerId) {
+      const chain = problemsByTriggerId[triggerid]; // These are original ProblemDTO objects
+      if (chain.length > 1) {
+        // Sort by timestamp descending to easily find the newest
+        const sortedChain = [...chain].sort(
+          (a, b) => parseInt(String(b.timestamp), 10) - parseInt(String(a.timestamp), 10)
+        );
+
+        if (sortedChain.length > 0 && sortedChain[0].eventid) {
+          const newestEventId = String(sortedChain[0].eventid);
+
+          for (const problemInChain of sortedChain) {
+            if (problemInChain.eventid && String(problemInChain.eventid) !== newestEventId) {
+              const indexToUpdate = eventIdToIndexMap.get(String(problemInChain.eventid));
+              if (indexToUpdate !== undefined) {
+                processedProblems[indexToUpdate].displayResolved = true;
+              }
+            }
+          }
+        }
+      }
+    }
+    return processedProblems;
+  }
+
   handleProblemAck = (problem: ProblemDTO, data: AckProblemData) => {
     return this.props.onProblemAck!(problem, data);
   };
@@ -416,8 +476,8 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     const result = [];
     const options = this.props.panelOptions;
     const highlightNewerThan = options.highlightNewEvents && options.highlightNewerThan;
-    const statusCell = (props: RTCell<ProblemDTO>) => StatusCell(props, highlightNewerThan);
-    const statusIconCell = (props: RTCell<ProblemDTO>) => StatusIconCell(props, highlightNewerThan);
+    const statusCell = (props: RTCell<ExtendedProblemDTO>) => StatusCell(props, highlightNewerThan);
+    const statusIconCell = (props: RTCell<ExtendedProblemDTO>) => StatusIconCell(props, highlightNewerThan);
     const hostNameCell = (props: { original: { host: any; hostInMaintenance: any } }) => (
       <HostCell name={props.original.host} maintenance={props.original.hostInMaintenance} />
     );
@@ -594,7 +654,8 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     const tmp = getTemplateSrv();
     const scopeVariables = tmp.getVariables();
     let selectedSeverityValues: string[] = [];
-    let problemsToRender = this.props.problems;
+    // First get basic filtered problems
+    let filteredProblems = this.props.problems;
     const severityObject = scopeVariables.find((variable) => variable.name === 'Severity');
 
     console.log(this.props.problems);
@@ -605,8 +666,8 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         .filter((option: any) => option.selected)
         .map((option) => option.value);
 
-      let selectedProblems = problemsToRender.filter((problem) => selectedSeverityValues.includes(problem.severity));
-      problemsToRender = selectedProblems;
+      let selectedProblems = filteredProblems.filter((problem) => selectedSeverityValues.includes(problem.severity));
+      filteredProblems = selectedProblems;
     } else {
       // @ts-ignore
       getAppEvents().emit('alert-warning', ['Severity değerleri tanımlanmamış', `Severity değerleri tanımlanmamış`]);
@@ -619,9 +680,12 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       );
 
       if (shouldShowAllProblems) {
-        problemsToRender = this.props.problems;
+        filteredProblems = this.props.problems;
       }
     }
+
+    // Now process problems to mark old problems in a chain as resolved
+    const problemsToRender = this.getProcessedProblems(filteredProblems);
 
     return (
       <div className={panelClass} ref={this.setRootRef}>
@@ -699,7 +763,7 @@ const HostCell: React.FC<HostCellProps> = ({ name, maintenance }) => {
 };
 
 function SeverityCell(
-  props: RTCell<ProblemDTO>,
+  props: RTCell<ExtendedProblemDTO>,
   problemSeverityDesc: TriggerSeverity[],
   markAckEvents?: boolean,
   ackEventColor?: string,
@@ -712,12 +776,12 @@ function SeverityCell(
   const severity = Number(problem.severity);
   // @ts-ignore
   severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
-  if (problem.severity && problem.value === '1') {
+  if (problem.severity && problem.value === '1' && !problem.displayResolved) {
     // @ts-ignore
     severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
   }
 
-  color = problem.value === '0' ? okColor : severityDesc.color;
+  color = problem.displayResolved || problem.value === '0' ? okColor : severityDesc.color;
 
   // Mark acknowledged triggers with different color
   if (markAckEvents && problem.acknowledged === '1') {
@@ -734,11 +798,15 @@ function SeverityCell(
 const DEFAULT_OK_COLOR = 'rgb(56, 189, 113)';
 const DEFAULT_PROBLEM_COLOR = 'rgb(215, 0, 0)';
 
-function StatusCell(props: RTCell<ProblemDTO>, highlightNewerThan?: string) {
+function StatusCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: string) {
   let status;
   let color;
 
-  if (props.value === '1') {
+  // Check if this is an older problem in a chain that should be displayed as resolved
+  if (props.original.displayResolved) {
+    status = 'RESOLVED';
+    color = DEFAULT_OK_COLOR;
+  } else if (props.value === '1') {
     status = 'PROBLEM';
     color = DEFAULT_PROBLEM_COLOR;
   } else {
@@ -762,8 +830,11 @@ function StatusCell(props: RTCell<ProblemDTO>, highlightNewerThan?: string) {
   );
 }
 
-function StatusIconCell(props: RTCell<ProblemDTO>, highlightNewerThan?: string) {
-  const status = props.value === '0' ? 'ok' : 'problem';
+function StatusIconCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: string) {
+  // If it's an older problem in a chain, display as OK
+  const displayAsOk = props.original.displayResolved || props.value === '0';
+  const status = displayAsOk ? 'ok' : 'problem';
+
   let newProblem = false;
   if (highlightNewerThan) {
     newProblem = isNewProblem(props.original, highlightNewerThan);
@@ -771,8 +842,8 @@ function StatusIconCell(props: RTCell<ProblemDTO>, highlightNewerThan?: string) 
   const className = cx(
     'zbx-problem-status-icon',
     { 'problem-status--new': newProblem },
-    { 'zbx-problem': props.value === '1' },
-    { 'zbx-ok': props.value === '0' }
+    { 'zbx-problem': props.value === '1' && !props.original.displayResolved },
+    { 'zbx-ok': displayAsOk }
   );
   return <GFHeartIcon status={status} className={className} />;
 }
