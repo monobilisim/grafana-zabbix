@@ -1,6 +1,6 @@
 import React from 'react';
 import { ProblemDTO, ZBXAcknowledge } from '../../../datasource/types';
-import { getAppEvents, getBackendSrv() } from '@grafana/runtime';
+import { getAppEvents, getBackendSrv } from '@grafana/runtime';
 import { Button } from '@grafana/ui';
 
 interface DownloadProblemsCsvProps {
