@@ -487,6 +487,16 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
 
     const columns = [
       { Header: 'Host', id: 'host', show: options.hostField, Cell: hostNameCell },
+      {
+        Header: 'IP',
+        width: 100,
+        Cell: (props: { original: any }) => {
+          const problem = props.original;
+
+          // @ts-ignore
+          return <IPCell problem={problem} />;
+        },
+      },
       { Header: 'Host (Technical Name)', id: 'hostTechName', show: options.hostTechNameField, Cell: hostTechNameCell },
       { Header: 'Host Groups', accessor: 'groups', show: options.hostGroups, Cell: GroupCell },
       { Header: 'Proxy', accessor: 'proxy', show: options.hostProxy },
@@ -831,6 +841,18 @@ function StatusCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: stri
       {status}
     </span>
   );
+}
+
+function IPCell(props: { problem: ProblemDTO }) {
+  const problem = props.problem;
+  let ip;
+  const tags = problem.tags || [];
+  tags.forEach((tag) => {
+    if (tag.tag === 'IP') {
+      ip = tag.value;
+    }
+  });
+  return <span>{ip ?? ''}</span>;
 }
 
 function StatusIconCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: string) {
