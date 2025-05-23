@@ -458,10 +458,8 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       {
         Header: 'Status',
         id: 'status',
-        accessor: (props: { original: any }) => {
-          const problem = props.original;
+        accessor: (problem: any) => {
           let value = '0';
-          console.log(problem);
           if (problem.value === '0' || problem.manual_close === '1') {
             value = '1';
           }
