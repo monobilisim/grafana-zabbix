@@ -63,12 +63,6 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     }
   }, [isOpen]);
 
-  async function t() {
-    const variables = getTemplateSrv().getVariables();
-    console.log(variables);
-  }
-  t();
-
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
