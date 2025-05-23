@@ -722,20 +722,39 @@ export class ZabbixDatasource extends DataSourceApi<ZabbixMetricsQuery, ZabbixDS
     }
 
     let getProblemsPromise: Promise<ProblemDTO[]>;
-    if (showProblems === ShowProblemTypes.History || target.options?.useTimeRange) {
+    // if (showProblems === ShowProblemTypes.History || target.options?.useTimeRange) {
+    //   problemsOptions.timeFrom = timeFrom;
+    //   problemsOptions.timeTo = timeTo;
+    //   console.log(problemsOptions);
+    //   getProblemsPromise = this.zabbix.getProblemsHistory(
+    //     groupFilter,
+    //     hostFilter,
+    //     appFilter,
+    //     proxyFilter,
+    //     problemsOptions
+    //   );
+    // } else {
+    //   getProblemsPromise = this.zabbix.getProblems(groupFilter, hostFilter, appFilter, proxyFilter, problemsOptions);
+    // }
+
+    const now = Math.floor(Date.now() / 1000);
+    const fiveYearsInSeconds = 5 * 365.25 * 24 * 60 * 60;
+    problemsOptions.timeFrom = now - Math.floor(fiveYearsInSeconds);
+    problemsOptions.timeTo = now;
+
+    if (target.options?.useTimeRange) {
       problemsOptions.timeFrom = timeFrom;
       problemsOptions.timeTo = timeTo;
-      console.log(problemsOptions);
-      getProblemsPromise = this.zabbix.getProblemsHistory(
-        groupFilter,
-        hostFilter,
-        appFilter,
-        proxyFilter,
-        problemsOptions
-      );
-    } else {
-      getProblemsPromise = this.zabbix.getProblems(groupFilter, hostFilter, appFilter, proxyFilter, problemsOptions);
     }
+
+    getProblemsPromise = this.zabbix.getProblemsHistory(
+      groupFilter,
+      hostFilter,
+      appFilter,
+      proxyFilter,
+      problemsOptions
+    );
+
     const getUsersPromise = this.zabbix.getUsers();
 
     let proxies;
