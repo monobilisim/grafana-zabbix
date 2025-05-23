@@ -45,7 +45,9 @@ export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ proble
     for (const problem of problemsToRender) {
       // Format timestamp to readable date
       const formatTimestamp = (timestamp: number) => {
-        if (!timestamp) return '';
+        if (!timestamp) {
+          return '';
+        }
         const date = new Date(timestamp * 1000); // Convert Unix timestamp to JS Date
         return date.toLocaleDateString('en-US', {
           month: 'numeric',
@@ -57,8 +59,16 @@ export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ proble
         });
       };
 
-      // Determine status based on problem state
-      const status = problem.r_eventid ? 'RESOLVED' : 'PROBLEM';
+      let status;
+      if (problem.value === '0') {
+        status = 'RESOLVED';
+      } else {
+        status = 'PROBLEM';
+      }
+
+      if (problem.manual_close === '1' && problem.value !== '1') {
+        status = 'RESOLVED';
+      }
 
       // Format acknowledges for Actions column
       let actions = '';
