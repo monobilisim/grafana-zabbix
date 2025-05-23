@@ -747,13 +747,17 @@ export class ZabbixDatasource extends DataSourceApi<ZabbixMetricsQuery, ZabbixDS
       problemsOptions.timeTo = timeTo;
     }
 
-    getProblemsPromise = this.zabbix.getProblemsHistory(
-      groupFilter,
-      hostFilter,
-      appFilter,
-      proxyFilter,
-      problemsOptions
-    );
+    if (showProblems === ShowProblemTypes.History) {
+      getProblemsPromise = this.zabbix.getProblemsHistory(
+        groupFilter,
+        hostFilter,
+        appFilter,
+        proxyFilter,
+        problemsOptions
+      );
+    } else {
+      getProblemsPromise = this.zabbix.getProblems(groupFilter, hostFilter, appFilter, proxyFilter, problemsOptions);
+    }
 
     const getUsersPromise = this.zabbix.getUsers();
 
