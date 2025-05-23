@@ -461,8 +461,8 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         accessor: (props: { original: any }) => {
           const problem = props.original;
           let value = '0';
-
-          if (problem.value === '1' || problem.manual_close === '1') {
+          console.log(problem);
+          if (problem.value === '0' || problem.manual_close === '1') {
             value = '1';
           }
 
