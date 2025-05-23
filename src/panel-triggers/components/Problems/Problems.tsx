@@ -455,7 +455,22 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         accessor: 'value',
         Cell: statusIconCell,
       },
-      { Header: 'Status', accessor: 'value', show: options.statusField, width: 100, Cell: statusCell },
+      {
+        Header: 'Status',
+        accessor: (props: { original: any }) => {
+          const problem = props.original;
+          let value = 0;
+
+          if (problem.value === 1 || problem.manual_close === 1) {
+            value = 1;
+          }
+
+          return value;
+        },
+        show: options.statusField,
+        width: 100,
+        Cell: statusCell,
+      },
       { Header: 'Problem', accessor: 'name', minWidth: 200, Cell: ProblemCell },
       { Header: 'Operational data', accessor: 'opdata', show: options.opdataField, width: 150, Cell: OpdataCell },
       {
