@@ -731,6 +731,7 @@ const DEFAULT_PROBLEM_COLOR = 'rgb(215, 0, 0)';
 function StatusCell(props: RTCell<ProblemDTO>, highlightNewerThan?: string) {
   let status = props.value === '0' ? 'RESOLVED' : 'PROBLEM';
   let color = props.value === '0' ? DEFAULT_OK_COLOR : DEFAULT_PROBLEM_COLOR;
+  console.log(props.original);
   if (props.original.manual_close === '1') {
     status = 'RESOLVED';
     color = DEFAULT_OK_COLOR;
