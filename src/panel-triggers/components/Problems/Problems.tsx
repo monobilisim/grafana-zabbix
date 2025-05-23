@@ -740,7 +740,7 @@ function StatusCell(props: RTCell<ProblemDTO>, highlightNewerThan?: string) {
     color = DEFAULT_OK_COLOR;
   }
 
-  if (props.original.manual_close === '1' && props.original.value !== '1') {
+  if (props.original.manual_close === '1' && props.value !== '1') {
     status = 'RESOLVED';
     color = DEFAULT_OK_COLOR;
   }
