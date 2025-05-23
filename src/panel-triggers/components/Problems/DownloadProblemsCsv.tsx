@@ -1,6 +1,6 @@
 import React from 'react';
 import { ProblemDTO, ZBXAcknowledge } from '../../../datasource/types';
-import { getAppEvents } from '@grafana/runtime';
+import { getAppEvents, getTemplateSrv } from '@grafana/runtime';
 import { Button } from '@grafana/ui';
 
 interface DownloadProblemsCsvProps {
@@ -9,6 +9,9 @@ interface DownloadProblemsCsvProps {
 
 export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ problemsToRender }) => {
   const handleDownloadCsv = () => {
+    const variables = getTemplateSrv();
+    console.log(variables);
+
     if (!problemsToRender || problemsToRender.length === 0) {
       // @ts-ignore
       getAppEvents().emit('alert-warning', ['No Data', 'There is no data to export.']);
@@ -109,7 +112,9 @@ export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ proble
 
       // Format CSV string
       const formattedValues = values.map((value) => {
-        if (value === null || value === undefined) return '';
+        if (value === null || value === undefined) {
+          return '';
+        }
 
         let stringValue = String(value);
         stringValue = stringValue.replace(/"/g, '""');
