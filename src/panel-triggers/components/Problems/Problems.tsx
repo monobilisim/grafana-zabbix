@@ -518,12 +518,15 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       {
         Header: 'Status',
         id: 'status',
-        accessor: (problem: any) => {
+        accessor: (problem: ExtendedProblemDTO) => {
           let value;
-          if (problem.value === '1') {
-            value = '1';
+          // If it's an older problem in a chain that should be displayed as resolved
+          if (problem.displayResolved) {
+            value = '0'; // Force to resolved
+          } else if (problem.value === '1') {
+            value = '1'; // Problem
           } else {
-            value = '0';
+            value = '0'; // Resolved
           }
 
           if (problem.manual_close === '1' && problem.value !== '1') {
