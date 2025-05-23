@@ -75,7 +75,9 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                         </div>
                       ))}
                     {ack.action === '64' && <div className={styles.ackAction}>Unsuppressed the problem</div>}
-                    {ack.action === '4' && <div className={styles.ackAction}>Manually closed the problem</div>}
+                    {ack.action === '5' ||
+                      ack.action === '1' ||
+                      (ack.action === '7' && <div className={styles.ackAction}>Manually closed the problem</div>)}
                   </>
                 </div>
               );
@@ -104,7 +106,9 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                     </div>
                   ))}
                 {ack.action === '64' && <div className={styles.ackAction}>Unsuppressed the problem</div>}
-                {ack.action === '4' && <div className={styles.ackAction}>Manually closed the problem</div>}
+                {ack.action === '5' ||
+                  ack.action === '1' ||
+                  (ack.action === '7' && <div className={styles.ackAction}>Manually closed the problem</div>)}
               </div>
             );
           })}
