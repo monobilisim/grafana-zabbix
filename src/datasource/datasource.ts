@@ -725,6 +725,7 @@ export class ZabbixDatasource extends DataSourceApi<ZabbixMetricsQuery, ZabbixDS
     if (showProblems === ShowProblemTypes.History || target.options?.useTimeRange) {
       problemsOptions.timeFrom = timeFrom;
       problemsOptions.timeTo = timeTo;
+      console.log(problemsOptions);
       getProblemsPromise = this.zabbix.getProblemsHistory(
         groupFilter,
         hostFilter,
