@@ -1,6 +1,6 @@
 import React from 'react';
 import { ProblemDTO, ZBXAcknowledge } from '../../../datasource/types';
-import { getAppEvents, getBackendSrv } from '@grafana/runtime';
+import { getAppEvents } from '@grafana/runtime';
 import { Button } from '@grafana/ui';
 
 interface DownloadProblemsCsvProps {
@@ -9,9 +9,6 @@ interface DownloadProblemsCsvProps {
 
 export const DownloadProblemsCsv: React.FC<DownloadProblemsCsvProps> = ({ problemsToRender }) => {
   const handleDownloadCsv = () => {
-    const variables = getBackendSrv();
-    console.log(variables);
-
     if (!problemsToRender || problemsToRender.length === 0) {
       // @ts-ignore
       getAppEvents().emit('alert-warning', ['No Data', 'There is no data to export.']);
