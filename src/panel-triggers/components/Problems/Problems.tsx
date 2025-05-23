@@ -735,6 +735,10 @@ function StatusCell(props: RTCell<ProblemDTO>, highlightNewerThan?: string) {
     status = 'RESOLVED';
     color = DEFAULT_OK_COLOR;
   }
+  if (props.value === '1') {
+    status = 'PROBLEM';
+    color = DEFAULT_PROBLEM_COLOR;
+  }
   let newProblem = false;
   if (highlightNewerThan) {
     newProblem = isNewProblem(props.original, highlightNewerThan);
