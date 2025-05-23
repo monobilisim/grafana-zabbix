@@ -457,6 +457,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       },
       {
         Header: 'Status',
+        id: 'status',
         accessor: (props: { original: any }) => {
           const problem = props.original;
           let value = 0;
