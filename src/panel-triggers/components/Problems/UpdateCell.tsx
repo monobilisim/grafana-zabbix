@@ -15,7 +15,7 @@ import {
 } from '@grafana/ui';
 import { GrafanaTheme2, SelectableValue, dateTime, DateTime } from '@grafana/data';
 import { ProblemDTO } from '../../../datasource/types';
-import { getDataSourceSrv, getAppEvents, getBackendSrv } from '@grafana/runtime';
+import { getDataSourceSrv, getAppEvents, getBackendSrv, getTemplateSrv } from '@grafana/runtime';
 
 interface UpdateCellProps {
   problem: ProblemDTO;
@@ -63,11 +63,16 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     }
   }, [isOpen]);
 
+  async function t() {
+    const variables = getTemplateSrv().getVariables();
+    console.log(variables);
+  }
+  t();
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
     const backend = getBackendSrv();
-    console.log(backend);
     const user = await backend.get('/api/user');
     const name = user.name;
 
