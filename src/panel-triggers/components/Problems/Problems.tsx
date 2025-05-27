@@ -790,17 +790,19 @@ function SeverityCell(
   const severity = Number(problem.severity);
   // @ts-ignore
   severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
-  if (problem.severity && problem.value === '1' && !problem.displayResolved) {
+  if (problem.severity) {
+    // && problem.value === '1'
+    //  && !problem.displayResolved
     // @ts-ignore
     severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
   }
 
-  color = problem.displayResolved || problem.value === '0' ? okColor : severityDesc.color;
+  // color = problem.displayResolved || problem.value === '0' ? okColor : severityDesc.color;
 
   // Mark acknowledged triggers with different color
-  if (markAckEvents && problem.acknowledged === '1') {
-    color = ackEventColor;
-  }
+  // if (markAckEvents && problem.acknowledged === '1') {
+  //   color = ackEventColor;
+  // }
 
   return (
     <div className="severity-cell" style={{ background: color }}>
@@ -828,9 +830,9 @@ function StatusCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: stri
   //   color = DEFAULT_OK_COLOR;
   // }
 
-  if (props.original.manual_close === '1') {
-    props.value = '0';
-  }
+  // if (props.original.manual_close === '1') {
+  //   props.value = '0';
+  // }
 
   if (props.value === '1') {
     status = 'PROBLEM';
