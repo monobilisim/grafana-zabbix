@@ -828,6 +828,10 @@ function StatusCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: stri
   //   color = DEFAULT_OK_COLOR;
   // }
 
+  if (props.original.manual_close === '1') {
+    props.value = '0';
+  }
+
   if (props.value === '1') {
     status = 'PROBLEM';
     color = DEFAULT_PROBLEM_COLOR;
