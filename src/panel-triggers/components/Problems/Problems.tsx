@@ -21,13 +21,6 @@ import { TicketModal } from './UpdateTicketModal';
 import { UpdateCell } from './UpdateCell';
 import { DownloadProblemsCsv } from './DownloadProblemsCsv';
 
-// Extended interface to identify problems that should be displayed as resolved
-// When a problem is part of a problem chain (same triggerid), only the newest one
-// should display as PROBLEM, the older ones will display as RESOLVED
-interface ExtendedProblemDTO extends ProblemDTO {
-  displayResolved?: boolean;
-}
-
 const currentProblem = React.createContext<ProblemDTO | null>(null);
 
 const onExecuteScript = async (
@@ -346,59 +339,6 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     this.rootRef = ref;
   };
 
-  getProcessedProblems(problems: ProblemDTO[]): ExtendedProblemDTO[] {
-    if (!problems || problems.length === 0) {
-      return [];
-    }
-
-    const problemsByTriggerId: { [triggerid: string]: ProblemDTO[] } = {};
-    for (const problem of problems) {
-      if (!problemsByTriggerId[problem.triggerid]) {
-        problemsByTriggerId[problem.triggerid] = [];
-      }
-      problemsByTriggerId[problem.triggerid].push(problem);
-    }
-
-    // Create ExtendedProblemDTO array, preserving original order
-    const processedProblems: ExtendedProblemDTO[] = problems.map((p) => ({
-      ...p,
-      displayResolved: false, // Default to false
-    }));
-
-    // Create a map from eventid to index in processedProblems for efficient updates
-    const eventIdToIndexMap: Map<string, number> = new Map();
-    processedProblems.forEach((p, index) => {
-      // Ensure eventid exists and is a string
-      if (p.eventid) {
-        eventIdToIndexMap.set(String(p.eventid), index);
-      }
-    });
-
-    for (const triggerid in problemsByTriggerId) {
-      const chain = problemsByTriggerId[triggerid]; // These are original ProblemDTO objects
-      if (chain.length > 1) {
-        // Sort by timestamp descending to easily find the newest
-        const sortedChain = [...chain].sort(
-          (a, b) => parseInt(String(b.timestamp), 10) - parseInt(String(a.timestamp), 10)
-        );
-
-        if (sortedChain.length > 0 && sortedChain[0].eventid) {
-          const newestEventId = String(sortedChain[0].eventid);
-
-          for (const problemInChain of sortedChain) {
-            if (problemInChain.eventid && String(problemInChain.eventid) !== newestEventId) {
-              const indexToUpdate = eventIdToIndexMap.get(String(problemInChain.eventid));
-              if (indexToUpdate !== undefined) {
-                processedProblems[indexToUpdate].displayResolved = true;
-              }
-            }
-          }
-        }
-      }
-    }
-    return processedProblems;
-  }
-
   handleProblemAck = (problem: ProblemDTO, data: AckProblemData) => {
     return this.props.onProblemAck!(problem, data);
   };
@@ -683,8 +623,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       }
     }
 
-    // Now process problems to mark old problems in a chain as resolved
-    const problemsToRender = this.getProcessedProblems(filteredProblems);
+    const problemsToRender = filteredProblems;
 
     return (
       <div className={panelClass} ref={this.setRootRef}>
@@ -776,13 +715,11 @@ function SeverityCell(
   // @ts-ignore
   severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
   if (problem.severity && problem.value === '1') {
-    //  && problem.value === '1'
-    //  && !problem.displayResolved
     // @ts-ignore
     severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
   }
 
-  color = problem.displayResolved || problem.value === '0' ? okColor : severityDesc.color;
+  color = problem.value === '0' ? okColor : severityDesc.color;
 
   // Mark acknowledged triggers with different color
   // if (markAckEvents && problem.acknowledged === '1') {
@@ -803,22 +740,6 @@ function StatusCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: stri
   let status;
   let color;
 
-  // Check if this is an older problem in a chain that should be displayed as resolved
-  // if (props.original.displayResolved) {
-  //   status = 'RESOLVED';
-  //   color = DEFAULT_OK_COLOR;
-  // } else if (props.value === '1') {
-  //   status = 'PROBLEM';
-  //   color = DEFAULT_PROBLEM_COLOR;
-  // } else {
-  //   status = 'RESOLVED';
-  //   color = DEFAULT_OK_COLOR;
-  // }
-
-  // if (props.original.manual_close === '1') {
-  //   props.value = '0';
-  // }
-
   if (props.value === '1') {
     status = 'PROBLEM';
     color = DEFAULT_PROBLEM_COLOR;
@@ -826,11 +747,6 @@ function StatusCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: stri
     status = 'RESOLVED';
     color = DEFAULT_OK_COLOR;
   }
-
-  // if (props.original.manual_close === '1' && props.value !== '1') {
-  //   status = 'RESOLVED';
-  //   color = DEFAULT_OK_COLOR;
-  // }
 
   let newProblem = false;
   if (highlightNewerThan) {
@@ -856,8 +772,7 @@ function IPCell(props: { problem: ProblemDTO }) {
 }
 
 function StatusIconCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: string) {
-  // If it's an older problem in a chain, display as OK
-  const displayAsOk = props.original.displayResolved || props.value === '0';
+  const displayAsOk = props.value === '0';
   const status = displayAsOk ? 'ok' : 'problem';
 
   let newProblem = false;
@@ -867,7 +782,7 @@ function StatusIconCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: 
   const className = cx(
     'zbx-problem-status-icon',
     { 'problem-status--new': newProblem },
-    { 'zbx-problem': props.value === '1' && !props.original.displayResolved },
+    { 'zbx-problem': props.value === '1' },
     { 'zbx-ok': displayAsOk }
   );
   return <GFHeartIcon status={status} className={className} />;

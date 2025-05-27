@@ -36,6 +36,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
   const suppressProblemDisabled = closeProblem || unsuppressProblem;
   const unsuppressProblemDisabled = closeProblem || suppressProblem;
+  const closeProblemDisabled = problem.manual_close === '0';
 
   useEffect(() => {
     if (suppressProblemDisabled && suppressProblem) {
@@ -250,6 +251,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
                     id="close_problem_cb"
                     value={closeProblem}
                     onChange={(e) => setCloseProblem(e.currentTarget.checked)}
+                    disabled={closeProblemDisabled}
                   />
                 </div>
               </li>
