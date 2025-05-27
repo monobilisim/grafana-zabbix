@@ -27,7 +27,7 @@ export function joinTriggersWithProblems(problems: ZBXProblem[], triggers: ZBXTr
         suppression_data: p.suppression_data,
         description: p.name || t.description,
         comments: t.comments,
-        value: t.value,
+        value: p.r_eventid === '0' ? '1' : '0',
         r_eventid: p.r_eventid,
         opdata: p.opdata,
         groups: t.groups,
@@ -72,7 +72,7 @@ export function joinTriggersWithEvents(
 
     if (t) {
       const problemDTO: ProblemDTO = {
-        value: valueFromEvent ? e.value : t.value,
+        value: e.r_eventid === '0' ? '1' : '0',
         timestamp: Number(e.clock),
         triggerid: e.objectid,
         eventid: e.eventid,
