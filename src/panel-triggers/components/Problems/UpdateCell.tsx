@@ -82,6 +82,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
     const backend = getBackendSrv();
     const user = await backend.get('/api/user');
     const name = user.name;
+    console.log(user);
 
     let actions = 0;
 
