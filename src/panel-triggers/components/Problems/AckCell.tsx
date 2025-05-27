@@ -24,11 +24,12 @@ interface MessageJson {
 }
 
 const values: Record<string, string[]> = {
-  closeProblem: ['1', '5', '7'],
+  closeProblem: ['1', '5', '7', '21'],
   message: ['4', '6'],
   suppressProblem: ['32', '36', '38'],
   unsuppressProblem: ['64', '68', '70'],
   changeSeverity: ['8'],
+  unacknowledged: ['16', '20', '21'],
   acknowledged: ['2', '6', '7', '38', '70'],
 };
 
@@ -110,6 +111,9 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                       <div className={styles.ackAction}>Manually closed the problem</div>
                     )}
                     {values.acknowledged.includes(ack.action) && <div className={styles.ackAction}>Acknowledged</div>}
+                    {values.unacknowledged.includes(ack.action) && (
+                      <div className={styles.ackAction}>Unacknowledged</div>
+                    )}
                   </>
                 </div>
               );
@@ -147,6 +151,7 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                   <div className={styles.ackAction}>Manually closed the problem</div>
                 )}
                 {values.acknowledged.includes(ack.action) && <div className={styles.ackAction}>Acknowledged</div>}
+                {values.unacknowledged.includes(ack.action) && <div className={styles.ackAction}>Unacknowledged</div>}
               </div>
             );
           })}
