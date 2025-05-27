@@ -251,6 +251,7 @@ export interface ZBXEvent {
   acknowledges?: ZBXAcknowledge[];
   tags?: ZBXTag[];
   suppressed?: string;
+  r_clock?: string;
 }
 
 export interface ZBXTag {

@@ -67,6 +67,9 @@ export function joinTriggersWithEvents(
     const triggerId = Number(e.objectid);
     const t = triggers[triggerId];
 
+    console.log('Event', e);
+    console.log('Trigger', t);
+
     if (t) {
       const problemDTO: ProblemDTO = {
         value: valueFromEvent ? e.value : t.value,
@@ -81,6 +84,7 @@ export function joinTriggersWithEvents(
         suppressed: e.suppressed,
         description: t.description,
         comments: t.comments,
+        r_clock: e.r_clock,
         groups: t.groups,
         hosts: t.hosts,
         items: t.items,
