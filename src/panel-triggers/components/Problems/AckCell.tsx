@@ -24,11 +24,12 @@ interface MessageJson {
 }
 
 const values: Record<string, string[]> = {
-  closeProblem: ['1', '5'],
-  message: ['4'],
-  suppressProblem: ['32', '36'],
-  unsuppressProblem: ['64', '68'],
+  closeProblem: ['1', '5', '7'],
+  message: ['4', '6'],
+  suppressProblem: ['32', '36', '38'],
+  unsuppressProblem: ['64', '68', '70'],
   changeSeverity: ['8'],
+  acknowledged: ['2', '6', '7', '38', '70'],
 };
 
 export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>) => {
@@ -108,6 +109,7 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                     {values.closeProblem.includes(ack.action) && (
                       <div className={styles.ackAction}>Manually closed the problem</div>
                     )}
+                    {values.acknowledged.includes(ack.action) && <div className={styles.ackAction}>Acknowledged</div>}
                   </>
                 </div>
               );
