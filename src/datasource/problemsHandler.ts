@@ -11,8 +11,7 @@ export function joinTriggersWithProblems(problems: ZBXProblem[], triggers: ZBXTr
     const p = problems[i];
     const triggerId = Number(p.objectid);
     const t = triggers[triggerId];
-    console.log('Problem', p);
-    console.log('Trigger', t);
+
     if (t) {
       const problemDTO: ProblemDTO = {
         timestamp: Number(p.clock),
@@ -66,9 +65,6 @@ export function joinTriggersWithEvents(
     const e = events[i];
     const triggerId = Number(e.objectid);
     const t = triggers[triggerId];
-
-    console.log('Event', e);
-    console.log('Trigger', t);
 
     if (t) {
       const problemDTO: ProblemDTO = {

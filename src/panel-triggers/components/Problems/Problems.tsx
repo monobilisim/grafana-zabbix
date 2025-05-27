@@ -790,14 +790,14 @@ function SeverityCell(
   const severity = Number(problem.severity);
   // @ts-ignore
   severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
-  if (problem.severity) {
-    // && problem.value === '1'
+  if (problem.severity && problem.value === '1') {
+    //  && problem.value === '1'
     //  && !problem.displayResolved
     // @ts-ignore
     severityDesc = _.find(problemSeverityDesc, (s: { priority: number }) => s.priority === severity);
   }
 
-  // color = problem.displayResolved || problem.value === '0' ? okColor : severityDesc.color;
+  color = problem.displayResolved || problem.value === '0' ? okColor : severityDesc.color;
 
   // Mark acknowledged triggers with different color
   // if (markAckEvents && problem.acknowledged === '1') {
