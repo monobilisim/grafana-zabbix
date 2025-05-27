@@ -529,21 +529,22 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Header: 'Status',
         id: 'status',
         accessor: (problem: ExtendedProblemDTO) => {
-          let value;
+          // let value;
           // If it's an older problem in a chain that should be displayed as resolved
-          if (problem.displayResolved) {
-            value = '0'; // Force to resolved
-          } else if (problem.value === '1') {
-            value = '1'; // Problem
-          } else {
-            value = '0'; // Resolved
-          }
+          // if (problem.displayResolved) {
+          //   value = '0'; // Force to resolved
+          // } else if (problem.value === '1') {
+          //   value = '1'; // Problem
+          // } else {
+          //   value = '0'; // Resolved
+          // }
 
-          if (problem.manual_close === '1' && problem.value !== '1') {
-            value = '0';
-          }
+          // if (problem.manual_close === '1' && problem.value !== '1') {
+          //   value = '0';
+          // }
 
-          return value;
+          // return value;
+          return problem.value;
         },
         show: options.statusField,
         width: 100,
@@ -816,10 +817,18 @@ function StatusCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: stri
   let color;
 
   // Check if this is an older problem in a chain that should be displayed as resolved
-  if (props.original.displayResolved) {
-    status = 'RESOLVED';
-    color = DEFAULT_OK_COLOR;
-  } else if (props.value === '1') {
+  // if (props.original.displayResolved) {
+  //   status = 'RESOLVED';
+  //   color = DEFAULT_OK_COLOR;
+  // } else if (props.value === '1') {
+  //   status = 'PROBLEM';
+  //   color = DEFAULT_PROBLEM_COLOR;
+  // } else {
+  //   status = 'RESOLVED';
+  //   color = DEFAULT_OK_COLOR;
+  // }
+
+  if (props.value === '1') {
     status = 'PROBLEM';
     color = DEFAULT_PROBLEM_COLOR;
   } else {
@@ -827,10 +836,10 @@ function StatusCell(props: RTCell<ExtendedProblemDTO>, highlightNewerThan?: stri
     color = DEFAULT_OK_COLOR;
   }
 
-  if (props.original.manual_close === '1' && props.value !== '1') {
-    status = 'RESOLVED';
-    color = DEFAULT_OK_COLOR;
-  }
+  // if (props.original.manual_close === '1' && props.value !== '1') {
+  //   status = 'RESOLVED';
+  //   color = DEFAULT_OK_COLOR;
+  // }
 
   let newProblem = false;
   if (highlightNewerThan) {
