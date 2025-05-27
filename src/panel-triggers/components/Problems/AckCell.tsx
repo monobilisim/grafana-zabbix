@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { css } from '@emotion/css';
 import { RTCell } from '../../types';
 import { ProblemDTO } from '../../../datasource/types';
@@ -36,10 +36,27 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
   const theme = useTheme();
   const styles = getStyles(theme);
   const [modalOpen, setModalOpen] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const handleModalClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setModalOpen(false);
+      }
+    };
+
+    if (modalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [modalOpen]);
 
   return (
     <>
@@ -53,7 +70,7 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
       </div>
 
       {modalOpen && problem.acknowledges && problem.acknowledges.length > 0 && (
-        <div className={styles.ackList} onClick={handleModalClick}>
+        <div ref={modalRef} className={styles.ackList} onClick={handleModalClick}>
           {problem.acknowledges.map((ack, index) => {
             if (isValidJSONObject(ack.message)) {
               const parsedMessage = JSON.parse(ack.message) as MessageJson;
