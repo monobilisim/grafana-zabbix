@@ -23,6 +23,14 @@ interface MessageJson {
   message: string;
 }
 
+const values: Record<string, string[]> = {
+  closeProblem: ['1', '5'],
+  message: ['4'],
+  suppressProblem: ['32', '36'],
+  unsuppressProblem: ['64', '68'],
+  changeSeverity: ['8'],
+};
+
 export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>) => {
   const problem = props.original;
   const theme = useTheme();
@@ -61,23 +69,28 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                       <span className={styles.ackTime}>on {ack.time}</span>
                     </div>
                     {parsedMessage.message && <div className={styles.ackMessage}>{parsedMessage.message}</div>}
-                    {ack.action === '8' && (
+                    {values.changeSeverity.includes(ack.action) && (
                       <div className={styles.ackAction}>
+                        {/* @ts-ignore */}
                         Changed severity from {ack.old_severity} to {ack.new_severity}
                       </div>
                     )}
-                    {ack.action === '32' &&
-                      (parseInt(ack.suppress_until) === 0 ? (
+                    {values.suppressProblem.includes(ack.action) &&
+                      // @ts-ignore
+                      (parseInt(ack.suppress_until, 10) === 0 ? (
                         <div className={styles.ackAction}>Suppressed indefinitely</div>
                       ) : (
                         <div className={styles.ackAction}>
-                          Suppressed until {new Date(parseInt(ack.suppress_until) * 1000).toLocaleString()}
+                          {/* @ts-ignore */}
+                          Suppressed until {new Date(parseInt(ack.suppress_until, 10) * 1000).toLocaleString()}
                         </div>
                       ))}
-                    {ack.action === '64' && <div className={styles.ackAction}>Unsuppressed the problem</div>}
-                    {ack.action === '5' ||
-                      ack.action === '1' ||
-                      (ack.action === '7' && <div className={styles.ackAction}>Manually closed the problem</div>)}
+                    {values.unsuppressProblem.includes(ack.action) && (
+                      <div className={styles.ackAction}>Unsuppressed the problem</div>
+                    )}
+                    {values.closeProblem.includes(ack.action) && (
+                      <div className={styles.ackAction}>Manually closed the problem</div>
+                    )}
                   </>
                 </div>
               );
@@ -92,23 +105,28 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                   <span className={styles.ackTime}>on {ack.time}</span>
                 </div>
                 {ack.message && <div className={styles.ackMessage}>{ack.message}</div>}
-                {ack.action === '8' && (
+                {values.changeSeverity.includes(ack.action) && (
                   <div className={styles.ackAction}>
+                    {/* @ts-ignore */}
                     Changed severity from {ack.old_severity} to {ack.new_severity}
                   </div>
                 )}
-                {ack.action === '32' &&
-                  (parseInt(ack.suppress_until) === 0 ? (
+                {values.suppressProblem.includes(ack.action) &&
+                  // @ts-ignore
+                  (parseInt(ack.suppress_until, 10) === 0 ? (
                     <div className={styles.ackAction}>Suppressed indefinitely</div>
                   ) : (
                     <div className={styles.ackAction}>
-                      Suppressed until {new Date(parseInt(ack.suppress_until) * 1000).toLocaleString()}
+                      {/* @ts-ignore */}
+                      Suppressed until {new Date(parseInt(ack.suppress_until, 10) * 1000).toLocaleString()}
                     </div>
                   ))}
-                {ack.action === '64' && <div className={styles.ackAction}>Unsuppressed the problem</div>}
-                {ack.action === '5' ||
-                  ack.action === '1' ||
-                  (ack.action === '7' && <div className={styles.ackAction}>Manually closed the problem</div>)}
+                {values.unsuppressProblem.includes(ack.action) && (
+                  <div className={styles.ackAction}>Unsuppressed the problem</div>
+                )}
+                {values.closeProblem.includes(ack.action) && (
+                  <div className={styles.ackAction}>Manually closed the problem</div>
+                )}
               </div>
             );
           })}

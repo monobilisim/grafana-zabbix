@@ -21,6 +21,18 @@ interface UpdateCellProps {
   problem: ProblemDTO;
 }
 
+const values = {
+  close_problem: 1,
+  acknowledge_event: 2,
+  add_message: 4,
+  change_severity: 8,
+  unacknowledge_event: 16,
+  suppress_event: 32,
+  unsuppress_event: 64,
+  change_event_rank_to_cause: 128,
+  change_event_rank_to_symptom: 256,
+};
+
 export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
   const theme = useTheme();
   const styles = getStyles(theme);
@@ -73,19 +85,30 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
     let actions = 0;
 
+    // zabbixten açılınca 1
+    // grafanadan açılınca 5
     if (closeProblem) {
-      actions |= 1; // close problem
-      actions |= 2; // acknowledge
+      actions |= values.close_problem;
+      actions |= values.add_message; // action 5 elde etmek için her zaman yolluyoruz
     }
-    // Grafana User'ı mesajda içerdiğimiz için her istek mesaj bulunduruyor
-    actions |= 4; // message
+
+    // zabbixten de grafanadan da 4
+    if (message !== '') {
+      actions |= values.add_message;
+    }
+
+    // zabbixten 32
+    // grafanadan 36
     if (suppressProblem) {
-      //actions |= 2; // acknowledge
-      actions -= 4; // suppress doesn't like message to be added
-      actions |= 32; // suppress
+      actions |= values.suppress_event;
+      actions |= values.add_message; // action 36 elde etmek için her zaman yolluyoruz
     }
+
+    // zabbixten 64
+    // grafanadan 68
     if (unsuppressProblem) {
-      actions |= 64;
+      actions |= values.unsuppress_event;
+      actions |= values.add_message; // action 68 elde etmek için her zaman yolluyoruz
     }
 
     if (actions === 0 && !message) {
