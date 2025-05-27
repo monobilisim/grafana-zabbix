@@ -92,6 +92,7 @@ export interface ProblemDTO {
   timestamp: number;
   lastchange?: string;
   lastchangeUnix?: number;
+  r_clock?: string;
 
   /** Name of the trigger. */
   name?: string;

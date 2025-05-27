@@ -11,7 +11,8 @@ export function joinTriggersWithProblems(problems: ZBXProblem[], triggers: ZBXTr
     const p = problems[i];
     const triggerId = Number(p.objectid);
     const t = triggers[triggerId];
-
+    console.log('Problem', p);
+    console.log('Trigger', t);
     if (t) {
       const problemDTO: ProblemDTO = {
         timestamp: Number(p.clock),
@@ -26,7 +27,8 @@ export function joinTriggersWithProblems(problems: ZBXProblem[], triggers: ZBXTr
         suppression_data: p.suppression_data,
         description: p.name || t.description,
         comments: t.comments,
-        value: p.r_clock === '0' ? '1' : '0',
+        value: t.value,
+        r_clock: p.r_clock,
         opdata: p.opdata,
         groups: t.groups,
         hosts: t.hosts,
