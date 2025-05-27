@@ -755,8 +755,7 @@ export class ZabbixDatasource extends DataSourceApi<ZabbixMetricsQuery, ZabbixDS
         proxyFilter,
         problemsOptions
       );
-    } else {            time: p.timestamp * 1000,
-
+    } else {
       getProblemsPromise = this.zabbix.getProblems(groupFilter, hostFilter, appFilter, proxyFilter, problemsOptions);
     }
 

@@ -198,7 +198,6 @@ export interface ZBXTrigger {
   type?: string;
   url?: string;
   value?: string;
-  r_clock?: string;
 }
 
 export interface ZBXGroup {
