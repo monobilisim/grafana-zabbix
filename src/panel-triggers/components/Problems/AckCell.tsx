@@ -146,6 +146,7 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                 {values.closeProblem.includes(ack.action) && (
                   <div className={styles.ackAction}>Manually closed the problem</div>
                 )}
+                {values.acknowledged.includes(ack.action) && <div className={styles.ackAction}>Acknowledged</div>}
               </div>
             );
           })}
