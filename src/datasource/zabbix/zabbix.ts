@@ -511,6 +511,7 @@ export class Zabbix implements ZabbixConnector {
       })
       .then((query) => this.zabbixAPI.getProblems(query.groupids, query.hostids, query.applicationids, options))
       .then((problems) => {
+        console.log(problems);
         const triggerids = problems?.map((problem) => problem.objectid);
         return Promise.all([Promise.resolve(problems), this.zabbixAPI.getTriggersByIds(triggerids)]);
       })
@@ -547,6 +548,7 @@ export class Zabbix implements ZabbixConnector {
       })
       .then((query) => this.zabbixAPI.getEventsHistory(query.groupids, query.hostids, query.applicationids, options))
       .then((problems) => {
+        console.log(problems);
         const triggerids = problems?.map((problem) => problem.objectid);
         return Promise.all([Promise.resolve(problems), this.zabbixAPI.getTriggersByIds(triggerids)]);
       })
