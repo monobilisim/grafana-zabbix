@@ -209,10 +209,28 @@ export function sortProblems(problems: ProblemDTO[], target) {
 }
 
 export function toDataFrame(problems: any[], query: ZabbixMetricsQuery): DataFrame {
+  // Format tags for each problem as a JSON object
+  const problemsWithFormattedTags = problems.map(problem => {
+    if (problem.tags && problem.tags.length > 0) {
+      const formattedTags = {};
+      problem.tags.forEach(tag => {
+        formattedTags[tag.tag] = tag.value;
+      });
+      return {
+        ...problem,
+        formattedTags
+      };
+    }
+    return {
+      ...problem,
+      formattedTags: {}
+    };
+  });
+
   const problemsField: Field<any> = {
     name: 'Problems',
     type: FieldType.other,
-    values: new ArrayVector(problems),
+    values: new ArrayVector(problemsWithFormattedTags),
     config: {
       custom: {
         type: 'problems',
@@ -224,7 +242,7 @@ export function toDataFrame(problems: any[], query: ZabbixMetricsQuery): DataFra
     name: 'problems',
     refId: query?.refId || 'A',
     fields: [problemsField],
-    length: problems.length,
+    length: problemsWithFormattedTags.length,
   };
 
   return response;
