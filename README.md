@@ -1,49 +1,39 @@
 # Zabbix plugin for Grafana
 
-[![Version](https://badge.fury.io/gh/grafana%2Fgrafana-zabbix.svg)](https://github.com/grafana/grafana-zabbix/releases)
-[![Change Log](https://img.shields.io/badge/change-log-blue.svg?style=flat)](https://github.com/grafana/grafana-zabbix/blob/main/CHANGELOG.md)
-[![Docs](https://img.shields.io/badge/docs-latest-red.svg?style=flat)](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/)
+# Gereksinimler
 
-![Dashboard](https://user-images.githubusercontent.com/4932851/53799185-e1cdc700-3f4a-11e9-9cb4-8330f501b32e.png)
+## Nodejs >= 22
 
-## Features
+#### Eğer paket yöneticisi kullanılmayacaksa ve sistem Bash kullanıyor ise `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash && source $HOME/.bashrc && nvm install --lts`.
 
-- Select multiple metrics [by using Regex](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/guides/#multiple-items-on-one-graph)
-- Create interactive and reusable dashboards with [template variables](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/guides/templating/)
-- Show events on graphs with [Annotations](http://docs.grafana.org/reference/annotations/)
-- Display active problems with Triggers panel
-- Transform and shape your data with [metric processing functions](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/reference/functions/) (Avg, Median, Min, Max, Multiply, Summarize, Time shift, Alias)
-- Find problems faster with [Alerting](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/reference/alerting/) feature
-- Mix metrics from multiple data sources in the same dashboard or even graph
-- Discover and share [dashboards](https://grafana.com/dashboards) in the official library
+#### Eğer paket yönetici kullanılıyorsa `nodejs` paketi içerisinde `npm` yollamaz, dağıtımınız için hangi paket `npm` veriyorsa onu da indirin.
 
-See all features overview and dashboards examples at Grafana-Zabbix [Live demo](http://play.grafana-zabbix.org) site.
-Visit [plugins page](https://grafana.com/plugins) at [grafana.com](http://grafana.com) and check out available Grafana data sources, panels and [dashboards](https://grafana.com/dashboards?dataSource=alexanderzobnin-zabbix-datasource).
+## make >= 4.1
 
-## Installation
+## Golang >= 1.17
 
-Install by using `grafana-cli`
+#### Eğer dağıtımınız 1.17 veya üstü bir sürüm vermiyor ise adreste bulunan yöntemle son sürümü yükleyebilirsiniz https://go.dev/doc/install.
 
-```sh
-grafana-cli plugins install alexanderzobnin-zabbix-app
-```
+## yarn >= 1.22
 
-Or see more installation options in [docs](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/installation/).
+#### Eğer dağıtımınız `yarn` panetine sahip değilse Nodejs ve npm kurulduktan sonra bu komut ile indirebilirsiniz `npm install -g yarn`.
 
-## Getting started
+## zip >= 3.0
 
-First, [configure](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/configuration/) Zabbix data source. Then you can create your first dashboard with step-by-step [Getting started guide](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/guides/).
+## mage >= 1.15
 
-## Documentation
+#### Eğer golang 1.17 ve üstü kuruluysa bu komut ile `mage` yükleyebilirsiniz `go install github.com/magefile/mage@latest`.
 
-- [About](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/)
-- [Installation](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/installation)
-- [Getting Started](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/guides)
-- [Templating](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/guides/templating)
-- [Alerting](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/reference/alerting/)
-- [Metric processing functions](https://grafana.com/docs/plugins/alexanderzobnin-zabbix-app/latest/reference/functions/)
+# Kurulum
 
-## Community Resources, Feedback, and Support
+Proje klasörünü Grafana eklentileri dizinine taşıyın, genellikle `/var/lib/grafana/plugins` veya Docker Compose kullanıcıları için docker-compose.yml içerisinde tanımlı olabilir.
 
-- Found a bug? Want a new feature? Feel free to open an [issue](https://github.com/grafana/grafana-zabbix/issues/new).
-- Have a question? You also can open issue, but for questions, it would be better to use [Grafana Community](https://community.grafana.com/) portal.
+Gereksinimleri indir `yarn install`.
+
+`make all` komutu varsayılan olarak `systemctl restart grafana-server.service` çağırır.
+
+Eğer Grafana Docker Compose V2 ile çalışıyorsa Makefile üzerinde `cd /path/to/docker-compose.yml && docker compose down; docker compose up -d` ile değiştirin.
+
+Eğer Docker Compose V1 kullanılıyorsa `cd /path/to/docker-compose.yml && docker-compose down; docker-compose up -d` ile değiştirin.
+
+`make all` çalıştır
