@@ -6,7 +6,7 @@
 [![GPL License][license-shield]][license-url]
 
 [![Readme in English](https://img.shields.io/badge/Readme-English-blue)](README.md)
-[![Readme in English](https://img.shields.io/badge/Readme-Turkish-blue)](README-TR.md)
+[![Readme in English](https://img.shields.io/badge/Readme-Turkish-blue)](README-Turkish.md)
 
 <div align="center">  
 <a href="https://mono.net.tr/">  
