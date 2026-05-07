@@ -53,6 +53,25 @@ const parseEmails = (scriptString: string) => {
   return emailKeys;
 };
 
+// Fallback for the Python-based Send Email scrip, which
+// declares the dict as `emails = {` rather than `var emails = {`.
+const parseEmailsFallback = (scriptString: string) => {
+  const emailsStart = scriptString.indexOf('emails = {');
+  if (emailsStart === -1) {
+    return [];
+  }
+
+  const emailsEnd = scriptString.indexOf('}', emailsStart) + 1;
+  const emailsObjectText = scriptString.substring(emailsStart, emailsEnd);
+
+  const keyMatches = emailsObjectText.match(/["']([^"']+)["']\s*:/g);
+  if (!keyMatches) {
+    return [];
+  }
+
+  return keyMatches.map((key) => key.replace(/["']\s*:$/, '').slice(1));
+};
+
 function ActionButtons(props: { original: ProblemDTO }) {
   const [manualInput, setManualInput] = useState('');
   const styles = getStyles();
@@ -133,7 +152,10 @@ function ActionButtons(props: { original: ProblemDTO }) {
       const emailScript = scripts.find((script) => script.name === 'Send Email');
 
       if (emailScript?.command) {
-        const parsedCompanies = parseEmails(emailScript.command);
+        let parsedCompanies = parseEmails(emailScript.command);
+        if (parsedCompanies.length === 0) {
+          parsedCompanies = parseEmailsFallback(emailScript.command);
+        }
         setCompanies(parsedCompanies);
       }
 
