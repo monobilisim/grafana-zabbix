@@ -19,6 +19,7 @@ import { getDataSourceSrv, getAppEvents, getBackendSrv, getTemplateSrv } from '@
 
 interface UpdateCellProps {
   problem: ProblemDTO;
+  buttonColor?: string;
 }
 
 const values = {
@@ -33,7 +34,7 @@ const values = {
   change_event_rank_to_symptom: 256,
 };
 
-export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
+export const UpdateCell: React.FC<UpdateCellProps> = ({ problem, buttonColor }) => {
   const theme = useTheme();
   const styles = getStyles(theme);
 
@@ -176,7 +177,13 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
 
   return (
     <>
-      <button onClick={(e) => setIsOpen(!isOpen)}>Update</button>
+      <button
+        onClick={(e) => setIsOpen(!isOpen)}
+        className={styles.updateButton}
+        style={buttonColor ? { backgroundColor: buttonColor, borderColor: buttonColor } : undefined}
+      >
+        Update
+      </button>
 
       <Modal
         isOpen={isOpen}
@@ -221,6 +228,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
                   </div>
                 </div>
                 <div className={styles.tableFormsTdRight}>
+                  {/* @ts-ignore */}
                   <Stack spacing="md" direction="row" alignItems="flex-start" wrap>
                     <Checkbox
                       id="suppress_problem_cb"
@@ -237,11 +245,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
                       onChange={setSuppressTimeOption}
                       disabled={suppressTimeOptionsElementsDisabled}
                     />
-                    <DateTimePicker
-                      date={suppressUntilProblem}
-                      onChange={(date) => setSuppressUntilProblem(date)}
-                      placeholder="Select date and time"
-                    />
+                    <DateTimePicker date={suppressUntilProblem} onChange={(date) => setSuppressUntilProblem(date)} />
                   </Stack>
                 </div>
               </li>
@@ -288,6 +292,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem }) => {
               </li>
             </ul>
           </form>
+          {/* @ts-ignore */}
           <Stack justifyContent="flex-end" gap="md" style={{ marginTop: theme.spacing.md }}>
             <Button variant="secondary" disabled={isSubmitting} onClick={(e) => setIsOpen(false)}>
               Cancel
@@ -421,6 +426,18 @@ const getStyles = () => {
     labelWithHelp: css`
       display: flex;
       align-items: center;
+    `,
+    updateButton: css`
+      color: #fff;
+      border: 1px solid transparent;
+      padding: 4px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: filter 0.15s ease;
+      &:hover {
+        filter: brightness(1.1);
+      }
     `,
   };
 };

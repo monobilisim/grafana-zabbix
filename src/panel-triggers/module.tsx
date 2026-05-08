@@ -133,6 +133,13 @@ export const plugin = new PanelPlugin<ProblemsPanelOptions, {}>(ProblemsPanel)
         settings: [{ enableNamedColors: false }],
         category: ['Colors'],
       })
+      .addColorPicker({
+        path: 'updateButtonColor',
+        name: 'Update button color',
+        defaultValue: defaultPanelOptions.updateButtonColor,
+        settings: [{ enableNamedColors: false }],
+        category: ['Colors'],
+      })
 
       // Show/hide fields
       .addBooleanSwitch({

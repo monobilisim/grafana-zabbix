@@ -42,6 +42,7 @@ export interface ProblemsPanelOptions {
   okEventColor: TriggerColor;
   ackEventColor: TriggerColor;
   markAckEvents?: boolean;
+  updateButtonColor?: TriggerColor;
 }
 
 export const DEFAULT_SEVERITY: TriggerSeverity[] = [
@@ -92,6 +93,7 @@ export const defaultPanelOptions: Partial<ProblemsPanelOptions> = {
   okEventColor: 'rgb(56, 189, 113)',
   ackEventColor: 'rgb(56, 219, 156)',
   markAckEvents: false,
+  updateButtonColor: '#3274d9',
 };
 
 export interface ProblemsPanelTarget {
