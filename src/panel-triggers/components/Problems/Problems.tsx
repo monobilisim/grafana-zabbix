@@ -585,24 +585,39 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           paddingLeft: 3,
           userSelect: 'none',
           width: '100%',
+          cursor: 'default',
           transition: 'opacity 0.15s ease, border-color 0.1s ease',
         }}
-        title="Sürükleyip bırakarak sütunun sırasını değiştir"
       >
         <span
           draggable
-          onClick={(e) => e.preventDefault()}
           onDragStart={(e) => this.handleColumnDragStart(e, columnId)}
           onDragEnd={this.handleColumnDragEnd}
+          title="Sürükleyip bırakarak sütunun sırasını değiştir"
+          aria-label="Sürükle"
           style={{
-            color: '#9da5b8',
-            fontSize: 11,
-            lineHeight: 1,
-            letterSpacing: -1,
+            display: 'inline-flex',
+            alignItems: 'center',
             cursor: 'grab',
+            padding: '0 2px',
+            alignSelf: 'stretch',
           }}
         >
-          ⠿
+          <svg
+            aria-hidden="true"
+            width="0.5em"
+            height="1em"
+            viewBox="0 0 6 14"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ flex: 'none', display: 'block' }}
+          >
+            <circle cx="1.5" cy="2" r="1" fill="#9da5b8" />
+            <circle cx="4.5" cy="2" r="1" fill="#9da5b8" />
+            <circle cx="1.5" cy="7" r="1" fill="#9da5b8" />
+            <circle cx="4.5" cy="7" r="1" fill="#9da5b8" />
+            <circle cx="1.5" cy="12" r="1" fill="#9da5b8" />
+            <circle cx="4.5" cy="12" r="1" fill="#9da5b8" />
+          </svg>
         </span>
         <span>{text}</span>
       </span>
@@ -726,7 +741,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Cell: (props: RTCell<ProblemDTO>) => <span>{props.value}</span>,
       },
       {
-        Header: '',
+        Header: dh('Update', 'update'),
         id: 'update',
         width: 90,
         Cell: (props: { original: any }) => {
