@@ -571,9 +571,6 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
 
     return (
       <span
-        draggable
-        onDragStart={(e) => this.handleColumnDragStart(e, columnId)}
-        onDragEnd={this.handleColumnDragEnd}
         onDragEnter={(e) => this.handleColumnDragEnter(e, columnId)}
         onDragOver={this.handleColumnDragOver}
         onDrop={(e) => this.handleColumnDrop(e, columnId, currentColumnIds())}
@@ -581,7 +578,6 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           display: 'inline-flex',
           alignItems: 'center',
           gap: 4,
-          cursor: 'grab',
           opacity: isDragging ? 0.4 : 1,
           borderLeft: isDropTarget ? '3px solid #5794f2' : '3px solid transparent',
           paddingLeft: 3,
@@ -591,7 +587,21 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         }}
         title="Sürükleyip bırakarak sütunun sırasını değiştir"
       >
-        <span style={{ color: '#9da5b8', fontSize: 11, lineHeight: 1, letterSpacing: -1 }}>⠿</span>
+        <span
+          draggable
+          onClick={(e) => e.preventDefault()}
+          onDragStart={(e) => this.handleColumnDragStart(e, columnId)}
+          onDragEnd={this.handleColumnDragEnd}
+          style={{
+            color: '#9da5b8',
+            fontSize: 11,
+            lineHeight: 1,
+            letterSpacing: -1,
+            cursor: 'grab',
+          }}
+        >
+          ⠿
+        </span>
         <span>{text}</span>
       </span>
     );
