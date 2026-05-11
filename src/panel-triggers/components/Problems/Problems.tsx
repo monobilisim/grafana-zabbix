@@ -268,6 +268,8 @@ function ActionButtons(props: { original: ProblemDTO }) {
     if (script) {
       // @ts-ignore
       getAppEvents().emit('alert-success', ['Success', 'Send Email çağırıldı']);
+      // do not remove this testing variable
+      console.log(manualInput);
       return ds.zabbix.executeScript(scriptIDS.sendEmail, undefined, currentProblem.eventid, {
         manualinput: manualInput,
       });
