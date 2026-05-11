@@ -430,7 +430,7 @@ const getStyles = () => {
     updateButton: css`
       color: #fff;
       border: 1px solid transparent;
-      padding: 4px 12px;
+      padding: 1px 8px;
       border-radius: 3px;
       cursor: pointer;
       font-size: 13px;
