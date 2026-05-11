@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { css } from '@emotion/css';
 import { RTCell } from '../../types';
-import { ProblemDTO } from '../../../datasource/types';
+import { ProblemDTO, ZBXAcknowledge } from '../../../datasource/types';
 import { FAIcon } from '../../../components';
 import { useStyles, useTheme } from '@grafana/ui';
 import { GrafanaTheme } from '@grafana/data';
+import { getBackendSrv, getAppEvents, locationService } from '@grafana/runtime';
 
 function isValidJSONObject(str) {
   try {
@@ -20,7 +22,31 @@ function isValidJSONObject(str) {
 
 interface MessageJson {
   grafanaUser: string;
+  grafanaUserId?: number;
   message: string;
+}
+
+async function navigateToGrafanaUser(login: string, userId?: number) {
+  let resolvedId = userId;
+  if (!resolvedId && login) {
+    try {
+      const user = await getBackendSrv().get(`/api/users/lookup?loginOrEmail=${encodeURIComponent(login)}`);
+      resolvedId = user?.id;
+    } catch {
+      // ignore — handled below
+    }
+  }
+  if (resolvedId) {
+    locationService.push(`/admin/users/edit/${resolvedId}`);
+  } else {
+    // @ts-ignore
+    getAppEvents().emit('alert-warning', ['Kullanıcı bulunamadı', `${login} Grafana'da bulunamadı`]);
+  }
+}
+
+function getZabbixUserDisplay(ack: ZBXAcknowledge): string {
+  const fullName = `${ack.name || ''} ${ack.surname || ''}`.trim();
+  return fullName || ack.user || ack.alias || 'İsimsiz Kullanıcı';
 }
 
 const values: Record<string, string[]> = {
@@ -38,17 +64,32 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
   const theme = useTheme();
   const styles = getStyles(theme);
   const [modalOpen, setModalOpen] = useState(false);
+  const [popupPos, setPopupPos] = useState<{ top: number; left: number } | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   const handleModalClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
 
+  const toggleModal = () => {
+    if (!modalOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPopupPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setModalOpen(!modalOpen);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        setModalOpen(false);
+      const target = event.target as Node;
+      if (modalRef.current && modalRef.current.contains(target)) {
+        return;
       }
+      if (triggerRef.current && triggerRef.current.contains(target)) {
+        return;
+      }
+      setModalOpen(false);
     };
 
     if (modalOpen) {
@@ -62,7 +103,7 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
 
   return (
     <>
-      <div onClick={() => setModalOpen(!modalOpen)} className={styles.clickableArea}>
+      <div ref={triggerRef} onClick={toggleModal} className={styles.clickableArea}>
         {problem.acknowledges?.length > 0 && (
           <>
             <FAIcon icon="comments" />
@@ -71,8 +112,14 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
         )}
       </div>
 
-      {modalOpen && problem.acknowledges && problem.acknowledges.length > 0 && (
-        <div ref={modalRef} className={styles.ackList} onClick={handleModalClick}>
+      {modalOpen && problem.acknowledges && problem.acknowledges.length > 0 && popupPos &&
+        ReactDOM.createPortal(
+        <div
+          ref={modalRef}
+          className={styles.ackList}
+          style={{ top: popupPos.top, left: popupPos.left }}
+          onClick={handleModalClick}
+        >
           {problem.acknowledges.map((ack, index) => {
             if (isValidJSONObject(ack.message)) {
               const parsedMessage = JSON.parse(ack.message) as MessageJson;
@@ -81,9 +128,21 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
                   <>
                     <div className={styles.ackHeader}>
                       <span className={styles.ackUser}>
-                        {parsedMessage.grafanaUser && parsedMessage.grafanaUser !== ''
-                          ? parsedMessage.grafanaUser
-                          : 'İsimsiz Kullanıcı'}
+                        {parsedMessage.grafanaUser && parsedMessage.grafanaUser !== '' ? (
+                          <a
+                            href="#"
+                            className={styles.userLink}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              navigateToGrafanaUser(parsedMessage.grafanaUser, parsedMessage.grafanaUserId);
+                            }}
+                          >
+                            {parsedMessage.grafanaUser}
+                          </a>
+                        ) : (
+                          'İsimsiz Kullanıcı'
+                        )}
                       </span>
                       <span className={styles.ackTime}>on {ack.time}</span>
                     </div>
@@ -123,7 +182,8 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
               <div key={ack.acknowledgeid || index} className={styles.ackItem}>
                 <div className={styles.ackHeader}>
                   <span className={styles.ackUser}>
-                    {ack.user || ack.name} {ack.surname}
+                    {getZabbixUserDisplay(ack)}
+                    <span className={styles.zabbixLabel}> (Zabbix)</span>
                   </span>
                   <span className={styles.ackTime}>on {ack.time}</span>
                 </div>
@@ -155,7 +215,8 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
               </div>
             );
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
@@ -176,7 +237,7 @@ const getStyles = (theme: GrafanaTheme) => {
       }
     `,
     ackList: css`
-      position: absolute;
+      position: fixed;
       z-index: 1000;
       background: ${theme.colors.bg2};
       border: 1px solid ${theme.colors.border2};
@@ -207,6 +268,19 @@ const getStyles = (theme: GrafanaTheme) => {
     ackUser: css`
       font-weight: 600;
       margin-right: 8px;
+    `,
+    userLink: css`
+      color: ${theme.colors.linkExternal};
+      text-decoration: underline;
+      cursor: pointer;
+      &:hover {
+        color: ${theme.colors.linkHover};
+      }
+    `,
+    zabbixLabel: css`
+      font-weight: 400;
+      color: ${theme.colors.textWeak};
+      margin-left: 4px;
     `,
     ackTime: css`
       font-size: ${theme.typography.size.xs};

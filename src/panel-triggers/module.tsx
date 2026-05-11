@@ -209,6 +209,12 @@ export const plugin = new PanelPlugin<ProblemsPanelOptions, {}>(ProblemsPanel)
         category: ['Fields'],
       })
       .addBooleanSwitch({
+        path: 'applicationField',
+        name: 'Application',
+        defaultValue: defaultPanelOptions.applicationField,
+        category: ['Fields'],
+      })
+      .addBooleanSwitch({
         path: 'descriptionField',
         name: 'Description',
         defaultValue: defaultPanelOptions.descriptionField,

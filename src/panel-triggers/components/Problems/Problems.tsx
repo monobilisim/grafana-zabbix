@@ -714,6 +714,18 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Cell: OpdataCell,
       },
       {
+        Header: dh('Application', 'application'),
+        id: 'application',
+        show: options.applicationField,
+        width: 150,
+        accessor: (problem: ProblemDTO) => {
+          const tags = problem.tags || [];
+          const appTag = tags.find((t) => t.tag === 'Application');
+          return appTag?.value ?? '';
+        },
+        Cell: (props: RTCell<ProblemDTO>) => <span>{props.value}</span>,
+      },
+      {
         Header: '',
         id: 'update',
         width: 90,

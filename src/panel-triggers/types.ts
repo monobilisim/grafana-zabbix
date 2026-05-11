@@ -17,6 +17,7 @@ export interface ProblemsPanelOptions {
   ackField?: boolean;
   ageField?: boolean;
   opdataField?: boolean;
+  applicationField?: boolean;
   descriptionField?: boolean;
   descriptionAtNewLine?: boolean;
   showDatasourceName?: boolean;
@@ -70,6 +71,7 @@ export const defaultPanelOptions: Partial<ProblemsPanelOptions> = {
   ackField: true,
   ageField: false,
   opdataField: false,
+  applicationField: false,
   descriptionField: true,
   descriptionAtNewLine: false,
   showDatasourceName: false,
