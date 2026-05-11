@@ -27,7 +27,7 @@ const currentProblem = React.createContext<ProblemDTO | null>(null);
 
 const VIEWED_PROBLEMS_KEY = 'zbx-viewed-problems';
 const VIEWED_PROBLEMS_LIMIT = 1000;
-const TAG_ORDER_KEY = 'zbx-tag-order';
+const COLUMN_ORDER_KEY = 'zbx-column-order';
 
 function loadViewedProblems(): Set<string> {
   try {
@@ -55,9 +55,9 @@ function persistViewedProblems(set: Set<string>): Set<string> {
   return new Set(arr);
 }
 
-function loadTagOrder(): string[] {
+function loadColumnOrder(): string[] {
   try {
-    const raw = localStorage.getItem(TAG_ORDER_KEY);
+    const raw = localStorage.getItem(COLUMN_ORDER_KEY);
     if (!raw) {
       return [];
     }
@@ -68,12 +68,51 @@ function loadTagOrder(): string[] {
   }
 }
 
-function persistTagOrder(order: string[]): void {
+function persistColumnOrder(order: string[]): void {
   try {
-    localStorage.setItem(TAG_ORDER_KEY, JSON.stringify(order));
+    localStorage.setItem(COLUMN_ORDER_KEY, JSON.stringify(order));
   } catch {
     // ignore
   }
+}
+
+function getColumnId(col: any): string | undefined {
+  if (col.id) {
+    return col.id;
+  }
+  if (typeof col.accessor === 'string') {
+    return col.accessor;
+  }
+  return undefined;
+}
+
+function sortColumnsByOrder(columns: any[], order: string[]): any[] {
+  if (!order.length) {
+    return columns;
+  }
+  const byId = new Map<string, any>();
+  for (const col of columns) {
+    const id = getColumnId(col);
+    if (id) {
+      byId.set(id, col);
+    }
+  }
+  const result: any[] = [];
+  const seen = new Set<string>();
+  for (const id of order) {
+    const col = byId.get(id);
+    if (col) {
+      result.push(col);
+      seen.add(id);
+    }
+  }
+  for (const col of columns) {
+    const id = getColumnId(col);
+    if (!id || !seen.has(id)) {
+      result.push(col);
+    }
+  }
+  return result;
 }
 
 const onExecuteScript = async (
@@ -395,7 +434,9 @@ interface ProblemListState {
   expandedProblems: any;
   page: number;
   viewedProblems: Set<string>;
-  tagOrder: string[];
+  columnOrder: string[];
+  draggingColumnId: string | null;
+  dragOverColumnId: string | null;
 }
 
 export default class ProblemList extends PureComponent<ProblemListProps, ProblemListState> {
@@ -410,7 +451,9 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       expandedProblems: {},
       page: 0,
       viewedProblems: loadViewedProblems(),
-      tagOrder: loadTagOrder(),
+      columnOrder: loadColumnOrder(),
+      draggingColumnId: null,
+      dragOverColumnId: null,
     };
   }
 
@@ -480,18 +523,78 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     });
   };
 
-  handleTagDrop = (draggedTag: string, targetTag: string) => {
-    if (!draggedTag || draggedTag === targetTag) {
+  handleColumnDragStart = (e: React.DragEvent, columnId: string) => {
+    e.dataTransfer.setData('text/plain', columnId);
+    e.dataTransfer.effectAllowed = 'move';
+    this.setState({ draggingColumnId: columnId });
+  };
+
+  handleColumnDragEnd = () => {
+    this.setState({ draggingColumnId: null, dragOverColumnId: null });
+  };
+
+  handleColumnDragEnter = (e: React.DragEvent, columnId: string) => {
+    e.preventDefault();
+    if (this.state.dragOverColumnId !== columnId) {
+      this.setState({ dragOverColumnId: columnId });
+    }
+  };
+
+  handleColumnDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  handleColumnDrop = (e: React.DragEvent, targetColumnId: string, currentColumnIds: string[]) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const dragged = e.dataTransfer.getData('text/plain');
+    this.setState({ draggingColumnId: null, dragOverColumnId: null });
+    if (!dragged || dragged === targetColumnId) {
       return;
     }
-    let order = this.state.tagOrder.filter((t) => t !== draggedTag);
-    if (!order.includes(targetTag)) {
-      order.push(targetTag);
+    let newOrder = currentColumnIds.filter((id) => id !== dragged);
+    const targetIdx = newOrder.indexOf(targetColumnId);
+    if (targetIdx === -1) {
+      newOrder.push(dragged);
+    } else {
+      newOrder.splice(targetIdx, 0, dragged);
     }
-    const targetIdx = order.indexOf(targetTag);
-    order.splice(targetIdx, 0, draggedTag);
-    persistTagOrder(order);
-    this.setState({ tagOrder: order });
+    persistColumnOrder(newOrder);
+    this.setState({ columnOrder: newOrder });
+  };
+
+  renderDraggableHeader = (text: string, columnId: string, currentColumnIds: () => string[]) => {
+    const { draggingColumnId, dragOverColumnId } = this.state;
+    const isDragging = draggingColumnId === columnId;
+    const isDropTarget = !!draggingColumnId && draggingColumnId !== columnId && dragOverColumnId === columnId;
+
+    return (
+      <span
+        draggable
+        onDragStart={(e) => this.handleColumnDragStart(e, columnId)}
+        onDragEnd={this.handleColumnDragEnd}
+        onDragEnter={(e) => this.handleColumnDragEnter(e, columnId)}
+        onDragOver={this.handleColumnDragOver}
+        onDrop={(e) => this.handleColumnDrop(e, columnId, currentColumnIds())}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+          cursor: 'grab',
+          opacity: isDragging ? 0.4 : 1,
+          borderLeft: isDropTarget ? '3px solid #5794f2' : '3px solid transparent',
+          paddingLeft: 3,
+          userSelect: 'none',
+          width: '100%',
+          transition: 'opacity 0.15s ease, border-color 0.1s ease',
+        }}
+        title="Sürükleyip bırakarak sütunun sırasını değiştir"
+      >
+        <span style={{ color: '#9da5b8', fontSize: 11, lineHeight: 1, letterSpacing: -1 }}>⠿</span>
+        <span>{text}</span>
+      </span>
+    );
   };
 
   handleTagClick = (tag: ZBXTag, datasource: DataSourceRef, ctrlKey?: boolean, shiftKey?: boolean) => {
@@ -520,7 +623,6 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
   };
 
   buildColumns() {
-    const result = [];
     const options = this.props.panelOptions;
     const highlightNewerThan = options.highlightNewEvents && options.highlightNewerThan;
     const statusCell = (props: RTCell<ExtendedProblemDTO>) => StatusCell(props, highlightNewerThan);
@@ -532,23 +634,32 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       <HostCell name={props.original.hostTechName} maintenance={props.original.hostInMaintenance} />
     );
 
-    const columns = [
-      { Header: 'Host', id: 'host', show: options.hostField, Cell: hostNameCell },
+    let visibleColumnIds: string[] = [];
+    const getVisibleColumnIds = () => visibleColumnIds;
+    const dh = (text: string, id: string) => this.renderDraggableHeader(text, id, getVisibleColumnIds);
+
+    const columns: any[] = [
+      { Header: dh('Host', 'host'), id: 'host', show: options.hostField, Cell: hostNameCell },
       {
-        Header: 'IP',
+        Header: dh('IP', 'ip'),
+        id: 'ip',
         width: 100,
         Cell: (props: { original: any }) => {
           const problem = props.original;
-
           // @ts-ignore
           return <IPCell problem={problem} />;
         },
       },
-      { Header: 'Host (Technical Name)', id: 'hostTechName', show: options.hostTechNameField, Cell: hostTechNameCell },
-      { Header: 'Host Groups', accessor: 'groups', show: options.hostGroups, Cell: GroupCell },
-      { Header: 'Proxy', accessor: 'proxy', show: options.hostProxy },
       {
-        Header: 'Severity',
+        Header: dh('Host (Technical Name)', 'hostTechName'),
+        id: 'hostTechName',
+        show: options.hostTechNameField,
+        Cell: hostTechNameCell,
+      },
+      { Header: dh('Host Groups', 'groups'), accessor: 'groups', show: options.hostGroups, Cell: GroupCell },
+      { Header: dh('Proxy', 'proxy'), accessor: 'proxy', show: options.hostProxy },
+      {
+        Header: dh('Severity', 'severity'),
         show: options.severityField,
         className: 'problem-severity',
         width: 120,
@@ -573,7 +684,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Cell: statusIconCell,
       },
       {
-        Header: 'Status',
+        Header: dh('Status', 'status'),
         id: 'status',
         accessor: (problem: ExtendedProblemDTO) => {
           return problem.value;
@@ -582,21 +693,26 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         width: 100,
         Cell: statusCell,
       },
-      { Header: 'Problem', accessor: 'name', minWidth: 200, Cell: ProblemCell },
-      { Header: 'Operational data', accessor: 'opdata', show: options.opdataField, width: 150, Cell: OpdataCell },
+      { Header: dh('Problem', 'name'), accessor: 'name', minWidth: 200, Cell: ProblemCell },
+      {
+        Header: dh('Operational data', 'opdata'),
+        accessor: 'opdata',
+        show: options.opdataField,
+        width: 150,
+        Cell: OpdataCell,
+      },
       {
         Header: '',
         id: 'update',
         width: 90,
         Cell: (props: { original: any }) => {
           const problem = props.original;
-
           // @ts-ignore
           return <UpdateCell problem={problem} buttonColor={options.updateButtonColor} />;
         },
       },
       {
-        Header: 'Msg',
+        Header: dh('Msg', 'msg'),
         id: 'msg',
         show: options.ackField,
         width: 70,
@@ -604,21 +720,14 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Cell: (props: unknown) => <AckCell {...props} />,
       },
       {
-        Header: 'Tags',
+        Header: dh('Tags', 'tags'),
         accessor: 'tags',
         show: options.showTags,
         className: 'problem-tags',
-        Cell: (props: unknown) => (
-          <TagCell
-            {...(props as any)}
-            onTagClick={this.handleTagClick}
-            tagOrder={this.state.tagOrder}
-            onTagDrop={this.handleTagDrop}
-          />
-        ),
+        Cell: (props: unknown) => <TagCell {...(props as any)} onTagClick={this.handleTagClick} />,
       },
       {
-        Header: 'Age',
+        Header: dh('Age', 'age'),
         className: 'problem-age',
         width: 100,
         show: options.ageField,
@@ -627,7 +736,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Cell: AgeCell,
       },
       {
-        Header: 'Time',
+        Header: dh('Time', 'lastchange'),
         className: 'last-change',
         width: 150,
         accessor: 'timestamp',
@@ -636,21 +745,20 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           LastChangeCell(props, options.customLastChangeFormat && options.lastChangeFormat),
       },
       {
-        Header: 'Actions',
+        Header: dh('Actions', 'actions'),
         id: 'actions',
         show: true,
         className: getStyles().actionColumn,
-        width: 130, // Slightly wider to accommodate all buttons
+        width: 130,
         sortable: false,
         filterable: false,
         Cell: (props: { original: any }) => {
           const original = props.original;
-
           return <ActionButtons original={original} />;
         },
       },
       {
-        Header: 'Ticket ID',
+        Header: dh('Ticket ID', 'ticketid'),
         id: 'ticketid',
         className: getStyles().actionColumn,
         width: 100,
@@ -659,36 +767,38 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         accessor: (problem: any) => {
           const tags = problem.tags || [];
           let ticketIdValue: number | string = '';
-
           for (const tag of tags) {
             if (tag.tag === 'TicketId') {
               ticketIdValue = Number(tag.value);
               break;
             }
           }
-
           return ticketIdValue;
         },
         Cell: (props: { original: any }) => {
           const original = props.original;
-
           return <TicketID original={original} />;
         },
       },
       {
         Header: '',
+        id: 'expander',
         className: 'custom-expander',
         width: 60,
         expander: true,
         Expander: CustomExpander,
       },
     ];
-    for (const column of columns) {
+
+    const ordered = sortColumnsByOrder(columns, this.state.columnOrder);
+    const result: any[] = [];
+    for (const column of ordered) {
       if (column.show || column.show === undefined) {
         delete column.show;
         result.push(column);
       }
     }
+    visibleColumnIds = result.map((c) => getColumnId(c)).filter((id): id is string => !!id);
     return result;
   }
 
@@ -962,8 +1072,6 @@ function LastChangeCell(props: RTCell<ProblemDTO>, customFormat?: string) {
 
 interface TagCellProps extends RTCell<ProblemDTO> {
   onTagClick: (tag: ZBXTag, datasource: DataSourceRef | string, ctrlKey?: boolean, shiftKey?: boolean) => void;
-  tagOrder?: string[];
-  onTagDrop?: (draggedTag: string, targetTag: string) => void;
 }
 
 class TagCell extends PureComponent<TagCellProps> {
@@ -973,61 +1081,16 @@ class TagCell extends PureComponent<TagCellProps> {
     }
   };
 
-  handleDragStart = (e: React.DragEvent, tagName: string) => {
-    e.dataTransfer.setData('text/plain', tagName);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  handleDrop = (e: React.DragEvent, targetTag: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const dragged = e.dataTransfer.getData('text/plain');
-    if (this.props.onTagDrop) {
-      this.props.onTagDrop(dragged, targetTag);
-    }
-  };
-
-  sortTags(tags: ZBXTag[]): ZBXTag[] {
-    const order = this.props.tagOrder || [];
-    if (!order.length) {
-      return tags;
-    }
-    return [...tags].sort((a, b) => {
-      const ai = order.indexOf(a.tag);
-      const bi = order.indexOf(b.tag);
-      if (ai === -1 && bi === -1) {
-        return 0;
-      }
-      if (ai === -1) {
-        return 1;
-      }
-      if (bi === -1) {
-        return -1;
-      }
-      return ai - bi;
-    });
-  }
-
   render() {
     const tags = this.props.value || [];
-    const sortedTags = this.sortTags(tags);
     return [
-      sortedTags.map((tag: ZBXTag) => (
-        <span
+      tags.map((tag: ZBXTag) => (
+        <EventTag
           key={tag.tag + tag.value}
-          draggable
-          onDragStart={(e) => this.handleDragStart(e, tag.tag)}
-          onDragOver={this.handleDragOver}
-          onDrop={(e) => this.handleDrop(e, tag.tag)}
-          style={{ display: 'inline-block', cursor: 'grab' }}
-        >
-          <EventTag tag={tag} datasource={this.props.original.datasource} onClick={this.handleTagClick} />
-        </span>
+          tag={tag}
+          datasource={this.props.original.datasource}
+          onClick={this.handleTagClick}
+        />
       )),
     ];
   }
