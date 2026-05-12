@@ -4,7 +4,7 @@ import ReactTable from 'react-table-6';
 import _ from 'lodash';
 // eslint-disable-next-line
 import moment from 'moment';
-import { stylesFactory, Button } from '@grafana/ui';
+import { stylesFactory, Button, Modal } from '@grafana/ui';
 import { isNewProblem } from '../../utils';
 import { EventTag } from '../EventTag';
 import { ProblemDetails } from './ProblemDetails';
@@ -439,11 +439,13 @@ interface ProblemListState {
   columnOrder: string[];
   draggingColumnId: string | null;
   dragOverColumnId: string | null;
+  infoPopupProblem: ProblemDTO | null;
 }
 
 export default class ProblemList extends PureComponent<ProblemListProps, ProblemListState> {
   rootWidth: number;
   rootRef: any;
+  hoverOpenTimer: any = null;
 
   constructor(props: ProblemListProps) {
     super(props);
@@ -456,8 +458,56 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       columnOrder: loadColumnOrder(),
       draggingColumnId: null,
       dragOverColumnId: null,
+      infoPopupProblem: null,
     };
   }
+
+  componentWillUnmount() {
+    if (this.hoverOpenTimer) {
+      clearTimeout(this.hoverOpenTimer);
+      this.hoverOpenTimer = null;
+    }
+  }
+
+  markProblemViewed = (problem: ProblemDTO) => {
+    const eventid = problem?.eventid;
+    if (!eventid || this.state.viewedProblems.has(eventid)) {
+      return;
+    }
+    const merged = new Set(this.state.viewedProblems);
+    merged.add(eventid);
+    this.setState({ viewedProblems: persistViewedProblems(merged) });
+  };
+
+  openInfoPopup = (problem: ProblemDTO) => {
+    this.markProblemViewed(problem);
+    this.setState({ infoPopupProblem: problem });
+  };
+
+  closeInfoPopup = () => {
+    if (this.hoverOpenTimer) {
+      clearTimeout(this.hoverOpenTimer);
+      this.hoverOpenTimer = null;
+    }
+    this.setState({ infoPopupProblem: null });
+  };
+
+  scheduleHoverOpen = (problem: ProblemDTO) => {
+    if (this.hoverOpenTimer) {
+      clearTimeout(this.hoverOpenTimer);
+    }
+    this.hoverOpenTimer = setTimeout(() => {
+      this.hoverOpenTimer = null;
+      this.openInfoPopup(problem);
+    }, 300);
+  };
+
+  cancelHoverOpen = () => {
+    if (this.hoverOpenTimer) {
+      clearTimeout(this.hoverOpenTimer);
+      this.hoverOpenTimer = null;
+    }
+  };
 
   setRootRef = (ref: any) => {
     this.rootRef = ref;
@@ -655,6 +705,49 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     return expandedPage;
   };
 
+  buildInfoColumn(infoTrigger: ProblemsPanelOptions['infoTrigger']) {
+    if (infoTrigger === 'click popup' || infoTrigger === 'hover popup') {
+      const Cell = (props: { original: ProblemDTO }) => {
+        const problem = props.original;
+        const handlers =
+          infoTrigger === 'hover popup'
+            ? {
+                onMouseEnter: () => this.scheduleHoverOpen(problem),
+                onMouseLeave: () => this.cancelHoverOpen(),
+                onClick: (e: React.MouseEvent) => e.stopPropagation(),
+              }
+            : {
+                onClick: (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  this.openInfoPopup(problem);
+                },
+              };
+        return (
+          <span style={{ cursor: 'pointer' }} {...handlers}>
+            <i className="fa fa-info-circle"></i>
+          </span>
+        );
+      };
+      return {
+        Header: '',
+        id: 'expander',
+        className: 'custom-expander',
+        width: 60,
+        sortable: false,
+        filterable: false,
+        Cell,
+      };
+    }
+    return {
+      Header: '',
+      id: 'expander',
+      className: 'custom-expander',
+      width: 60,
+      expander: true,
+      Expander: CustomExpander,
+    };
+  }
+
   buildColumns() {
     const options = this.props.panelOptions;
     const highlightNewerThan = options.highlightNewEvents && options.highlightNewerThan;
@@ -825,14 +918,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           return <TicketID original={original} />;
         },
       },
-      {
-        Header: '',
-        id: 'expander',
-        className: 'custom-expander',
-        width: 60,
-        expander: true,
-        Expander: CustomExpander,
-      },
+      this.buildInfoColumn(options.infoTrigger),
     ];
 
     const ordered = sortColumnsByOrder(columns, this.state.columnOrder);
@@ -892,6 +978,8 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     }
 
     const problemsToRender = filteredProblems;
+    const popupMode = panelOptions.infoTrigger === 'hover popup' || panelOptions.infoTrigger === 'click popup';
+    const popupProblem = this.state.infoPopupProblem;
 
     return (
       <div className={panelClass} ref={this.setRootRef}>
@@ -965,6 +1053,43 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
             return {};
           }}
         />
+        {popupMode && (
+          <Modal
+            title="Problem details"
+            isOpen={!!popupProblem}
+            onDismiss={this.closeInfoPopup}
+            className={getStyles().infoPopupModal}
+          >
+            {popupProblem && (
+              <div className={cx('panel-problems', getStyles().infoPopupContent)}>
+                <div className="ReactTable" style={{ height: 'auto', overflow: 'visible', display: 'block' }}>
+                  <currentProblem.Provider value={popupProblem}>
+                    <ProblemDetails
+                      original={popupProblem}
+                      row={popupProblem}
+                      index={0}
+                      viewIndex={0}
+                      level={0}
+                      nestingPath={[]}
+                      rootWidth={1400}
+                      timeRange={this.props.timeRange}
+                      showTimeline={panelOptions.problemTimeline}
+                      allowDangerousHTML={panelOptions.allowDangerousHTML}
+                      panelId={this.props.panelId}
+                      getProblemEvents={this.props.getProblemEvents}
+                      getProblemAlerts={this.props.getProblemAlerts}
+                      getScripts={this.props.getScripts}
+                      onProblemAck={this.handleProblemAck}
+                      onExecuteScript={this.props.onExecuteScript}
+                      onTagClick={this.handleTagClick}
+                      subRows={false}
+                    />
+                  </currentProblem.Provider>
+                </div>
+              </div>
+            )}
+          </Modal>
+        )}
       </div>
     );
   }
@@ -1151,6 +1276,19 @@ function CustomExpander(props: RTCell<any>) {
 
 const getStyles = stylesFactory(() => {
   return {
+    infoPopupModal: css`
+      width: 90%;
+      max-width: 1400px;
+    `,
+    infoPopupContent: css`
+      .problem-details-container {
+        max-height: none !important;
+        opacity: 1 !important;
+        overflow: visible !important;
+        transition: none !important;
+        box-shadow: none !important;
+      }
+    `,
     downloadButtonContainer: css`
       display: flex;
       justify-content: flex-end;

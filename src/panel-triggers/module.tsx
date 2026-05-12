@@ -40,6 +40,18 @@ export const plugin = new PanelPlugin<ProblemsPanelOptions, {}>(ProblemsPanel)
         },
       })
       .addSelect({
+        path: 'infoTrigger',
+        name: 'Info trigger',
+        defaultValue: defaultPanelOptions.infoTrigger,
+        settings: {
+          options: [
+            { label: 'Default', value: 'default' },
+            { label: 'Hover popup', value: 'hover popup' },
+            { label: 'Click popup', value: 'click popup' },
+          ],
+        },
+      })
+      .addSelect({
         path: 'fontSize',
         name: 'Font size',
         defaultValue: defaultPanelOptions.fontSize,

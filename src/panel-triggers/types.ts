@@ -25,6 +25,7 @@ export interface ProblemsPanelOptions {
   hostsInMaintenance?: boolean;
   showTriggers?: 'all triggers' | 'unacknowledged' | 'acknowledged';
   sortProblems?: 'default' | 'lastchange' | 'priority';
+  infoTrigger?: 'default' | 'hover popup' | 'click popup';
   showEvents?: Number[];
   limit?: number;
   // View options
@@ -77,6 +78,7 @@ export const defaultPanelOptions: Partial<ProblemsPanelOptions> = {
   showDatasourceName: false,
   // Options
   sortProblems: 'lastchange',
+  infoTrigger: 'default',
   limit: undefined,
   // View options
   layout: 'table',
