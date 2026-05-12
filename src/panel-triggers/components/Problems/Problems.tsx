@@ -707,26 +707,25 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
 
   buildInfoColumn(infoTrigger: ProblemsPanelOptions['infoTrigger']) {
     if (infoTrigger === 'click popup' || infoTrigger === 'hover popup') {
-      const Cell = (props: { original: ProblemDTO }) => {
-        const problem = props.original;
-        const handlers =
-          infoTrigger === 'hover popup'
-            ? {
-                onMouseEnter: () => this.scheduleHoverOpen(problem),
-                onMouseLeave: () => this.cancelHoverOpen(),
-                onClick: (e: React.MouseEvent) => e.stopPropagation(),
-              }
-            : {
-                onClick: (e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  this.openInfoPopup(problem);
-                },
-              };
-        return (
-          <span style={{ cursor: 'pointer' }} {...handlers}>
-            <i className="fa fa-info-circle"></i>
-          </span>
-        );
+      const getProps = (_state: any, rowInfo: any) => {
+        if (!rowInfo) {
+          return {};
+        }
+        const problem = rowInfo.original as ProblemDTO;
+        if (infoTrigger === 'hover popup') {
+          return {
+            style: { cursor: 'pointer' },
+            onMouseEnter: () => this.scheduleHoverOpen(problem),
+            onMouseLeave: () => this.cancelHoverOpen(),
+          };
+        }
+        return {
+          style: { cursor: 'pointer' },
+          onClick: (e: React.MouseEvent) => {
+            e.stopPropagation();
+            this.openInfoPopup(problem);
+          },
+        };
       };
       return {
         Header: '',
@@ -735,7 +734,12 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         width: 60,
         sortable: false,
         filterable: false,
-        Cell,
+        getProps,
+        Cell: () => (
+          <span>
+            <i className="fa fa-info-circle"></i>
+          </span>
+        ),
       };
     }
     return {
@@ -1279,6 +1283,8 @@ const getStyles = stylesFactory(() => {
     infoPopupModal: css`
       width: 90%;
       max-width: 1400px;
+      top: 50%;
+      transform: translateY(-50%);
     `,
     infoPopupContent: css`
       .problem-details-container {
