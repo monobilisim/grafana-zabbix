@@ -598,7 +598,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            cursor: 'grab',
+            cursor: 'default',
             padding: '0 2px',
             alignSelf: 'stretch',
           }}
@@ -619,7 +619,13 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
             <circle cx="4.5" cy="12" r="1" fill="#9da5b8" />
           </svg>
         </span>
-        <span>{text}</span>
+        <span
+          style={{
+            cursor: 'default',
+          }}
+        >
+          {text}
+        </span>
       </span>
     );
   };
