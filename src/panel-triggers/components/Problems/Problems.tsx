@@ -221,10 +221,10 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
         if (missingScripts.length > 0) {
           // @ts-ignore
-          getAppEvents().emit('alert-warning', [
-            'Missing Scripts',
-            `Scriptler bulunamadı: ${missingScripts.join(', ')}`,
-          ]);
+          // getAppEvents().emit('alert-warning', [
+          //   'Missing Scripts',
+          //   `Scriptler bulunamadı: ${missingScripts.join(', ')}`,
+          // ]);
         }
       } catch (error) {
         console.error('Failed to fetch scripts:', error);
