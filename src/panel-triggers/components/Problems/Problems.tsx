@@ -145,6 +145,47 @@ const parseEmails = (scriptString: string) => {
   return emailKeys;
 };
 
+function getAckUserName(ack: any): string {
+  try {
+    const parsed = JSON.parse(ack?.message ?? '');
+    if (parsed && typeof parsed === 'object' && parsed.grafanaUser) {
+      return String(parsed.grafanaUser);
+    }
+  } catch {
+    // not JSON — fall through to Zabbix user fields
+  }
+  const fullName = `${ack?.name || ''} ${ack?.surname || ''}`.trim();
+  return fullName || ack?.user || ack?.alias || '';
+}
+
+function isAdminName(name: string): boolean {
+  return !!name && name.toLowerCase().includes('admin');
+}
+
+function getLatestNonAdminAssignee(acknowledges?: any[]): string {
+  if (!acknowledges || acknowledges.length === 0) {
+    return '';
+  }
+  const sorted = [...acknowledges].sort((a, b) => Number(b?.clock ?? 0) - Number(a?.clock ?? 0));
+  for (const ack of sorted) {
+    const name = getAckUserName(ack);
+    if (name && !isAdminName(name)) {
+      return name;
+    }
+  }
+  return '';
+}
+
+function hasNonAdminUpdate(acknowledges?: any[]): boolean {
+  if (!acknowledges || acknowledges.length === 0) {
+    return false;
+  }
+  return acknowledges.some((ack) => {
+    const name = getAckUserName(ack);
+    return !!name && !isAdminName(name);
+  });
+}
+
 // Fallback for the Python-based Send Email scrip, which
 // declares the dict as `emails = {` rather than `var emails = {`.
 const parseEmailsFallback = (scriptString: string) => {
@@ -248,6 +289,7 @@ function ActionButtons(props: { original: ProblemDTO }) {
         if (parsedCompanies.length === 0) {
           parsedCompanies = parseEmailsFallback(emailScript.command);
         }
+        console.log('Parsed companies:', parsedCompanies);
         setCompanies(parsedCompanies);
       }
 
@@ -844,13 +886,38 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         Cell: (props: RTCell<ProblemDTO>) => <span>{props.value}</span>,
       },
       {
+        Header: dh('Source', 'source'),
+        id: 'source',
+        show: options.sourceField,
+        width: 150,
+        accessor: (problem: ProblemDTO) => {
+          const tags = problem.tags || [];
+          const sourceTag = tags.find((t) => t.tag === 'Source' || t.tag === 'source');
+          return sourceTag?.value ?? '';
+        },
+        Cell: (props: RTCell<ProblemDTO>) => <span>{props.value}</span>,
+      },
+      {
+        Header: dh('Assignee', 'assignee'),
+        id: 'assignee',
+        show: options.assigneeField,
+        width: 150,
+        accessor: (problem: ProblemDTO) => getLatestNonAdminAssignee(problem.acknowledges),
+        Cell: (props: RTCell<ProblemDTO>) => <span>{props.value}</span>,
+      },
+      {
         Header: dh('Update', 'update'),
         id: 'update',
         width: 90,
         Cell: (props: { original: any }) => {
           const problem = props.original;
+          const nonAdmin = hasNonAdminUpdate(problem?.acknowledges);
+          const effectiveColor =
+            nonAdmin && options.updateButtonNonAdminColor
+              ? options.updateButtonNonAdminColor
+              : options.updateButtonColor;
           // @ts-ignore
-          return <UpdateCell problem={problem} buttonColor={options.updateButtonColor} />;
+          return <UpdateCell problem={problem} buttonColor={effectiveColor} />;
         },
       },
       {

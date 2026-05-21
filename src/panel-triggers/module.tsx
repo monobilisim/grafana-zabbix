@@ -152,6 +152,13 @@ export const plugin = new PanelPlugin<ProblemsPanelOptions, {}>(ProblemsPanel)
         settings: [{ enableNamedColors: false }],
         category: ['Colors'],
       })
+      .addColorPicker({
+        path: 'updateButtonNonAdminColor',
+        name: 'Update button color (updated)',
+        defaultValue: defaultPanelOptions.updateButtonNonAdminColor,
+        settings: [{ enableNamedColors: false }],
+        category: ['Colors'],
+      })
 
       // Show/hide fields
       .addBooleanSwitch({
@@ -224,6 +231,18 @@ export const plugin = new PanelPlugin<ProblemsPanelOptions, {}>(ProblemsPanel)
         path: 'applicationField',
         name: 'Application',
         defaultValue: defaultPanelOptions.applicationField,
+        category: ['Fields'],
+      })
+      .addBooleanSwitch({
+        path: 'sourceField',
+        name: 'Source',
+        defaultValue: defaultPanelOptions.sourceField,
+        category: ['Fields'],
+      })
+      .addBooleanSwitch({
+        path: 'assigneeField',
+        name: 'Assignee',
+        defaultValue: defaultPanelOptions.assigneeField,
         category: ['Fields'],
       })
       .addBooleanSwitch({

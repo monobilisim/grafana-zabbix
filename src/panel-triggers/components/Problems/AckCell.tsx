@@ -26,24 +26,6 @@ interface MessageJson {
   message: string;
 }
 
-async function navigateToGrafanaUser(login: string, userId?: number) {
-  let resolvedId = userId;
-  if (!resolvedId && login) {
-    try {
-      const user = await getBackendSrv().get(`/api/users/lookup?loginOrEmail=${encodeURIComponent(login)}`);
-      resolvedId = user?.id;
-    } catch {
-      // ignore — handled below
-    }
-  }
-  if (resolvedId) {
-    locationService.push(`/admin/users/edit/${resolvedId}`);
-  } else {
-    // @ts-ignore
-    getAppEvents().emit('alert-warning', ['Kullanıcı bulunamadı', `${login} Grafana'da bulunamadı`]);
-  }
-}
-
 function getZabbixUserDisplay(ack: ZBXAcknowledge): string {
   const fullName = `${ack.name || ''} ${ack.surname || ''}`.trim();
   return fullName || ack.user || ack.alias || 'İsimsiz Kullanıcı';
@@ -112,112 +94,105 @@ export const AckCell: React.FC<RTCell<ProblemDTO>> = (props: RTCell<ProblemDTO>)
         )}
       </div>
 
-      {modalOpen && problem.acknowledges && problem.acknowledges.length > 0 && popupPos &&
+      {modalOpen &&
+        problem.acknowledges &&
+        problem.acknowledges.length > 0 &&
+        popupPos &&
         ReactDOM.createPortal(
-        <div
-          ref={modalRef}
-          className={styles.ackList}
-          style={{ top: popupPos.top, left: popupPos.left }}
-          onClick={handleModalClick}
-        >
-          {problem.acknowledges.map((ack, index) => {
-            if (isValidJSONObject(ack.message)) {
-              const parsedMessage = JSON.parse(ack.message) as MessageJson;
-              return (
-                <div key={ack.acknowledgeid || index} className={styles.ackItem}>
-                  <>
-                    <div className={styles.ackHeader}>
-                      <span className={styles.ackUser}>
-                        {parsedMessage.grafanaUser && parsedMessage.grafanaUser !== '' ? (
-                          <a
-                            href="#"
-                            className={styles.userLink}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              navigateToGrafanaUser(parsedMessage.grafanaUser, parsedMessage.grafanaUserId);
-                            }}
-                          >
-                            {parsedMessage.grafanaUser}
-                          </a>
-                        ) : (
-                          'İsimsiz Kullanıcı'
-                        )}
-                      </span>
-                      <span className={styles.ackTime}>on {ack.time}</span>
-                    </div>
-                    {parsedMessage.message && <div className={styles.ackMessage}>{parsedMessage.message}</div>}
-                    {values.changeSeverity.includes(ack.action) && (
-                      <div className={styles.ackAction}>
-                        {/* @ts-ignore */}
-                        Changed severity from {ack.old_severity} to {ack.new_severity}
+          <div
+            ref={modalRef}
+            className={styles.ackList}
+            style={{ top: popupPos.top, left: popupPos.left }}
+            onClick={handleModalClick}
+          >
+            {problem.acknowledges.map((ack, index) => {
+              if (isValidJSONObject(ack.message)) {
+                const parsedMessage = JSON.parse(ack.message) as MessageJson;
+                return (
+                  <div key={ack.acknowledgeid || index} className={styles.ackItem}>
+                    <>
+                      <div className={styles.ackHeader}>
+                        <span className={styles.ackUser}>
+                          {parsedMessage.grafanaUser && parsedMessage.grafanaUser !== '' ? (
+                            <p>{parsedMessage.grafanaUser}</p>
+                          ) : (
+                            'İsimsiz Kullanıcı'
+                          )}
+                        </span>
+                        <span className={styles.ackTime}>on {ack.time}</span>
                       </div>
-                    )}
-                    {values.suppressProblem.includes(ack.action) &&
-                      // @ts-ignore
-                      (parseInt(ack.suppress_until, 10) === 0 ? (
-                        <div className={styles.ackAction}>Suppressed indefinitely</div>
-                      ) : (
+                      {parsedMessage.message && <div className={styles.ackMessage}>{parsedMessage.message}</div>}
+                      {values.changeSeverity.includes(ack.action) && (
                         <div className={styles.ackAction}>
                           {/* @ts-ignore */}
-                          Suppressed until {new Date(parseInt(ack.suppress_until, 10) * 1000).toLocaleString()}
+                          Changed severity from {ack.old_severity} to {ack.new_severity}
                         </div>
-                      ))}
-                    {values.unsuppressProblem.includes(ack.action) && (
-                      <div className={styles.ackAction}>Unsuppressed the problem</div>
-                    )}
-                    {values.closeProblem.includes(ack.action) && (
-                      <div className={styles.ackAction}>Manually closed the problem</div>
-                    )}
-                    {values.acknowledged.includes(ack.action) && <div className={styles.ackAction}>Acknowledged</div>}
-                    {values.unacknowledged.includes(ack.action) && (
-                      <div className={styles.ackAction}>Unacknowledged</div>
-                    )}
-                  </>
-                </div>
-              );
-            }
-
-            return (
-              <div key={ack.acknowledgeid || index} className={styles.ackItem}>
-                <div className={styles.ackHeader}>
-                  <span className={styles.ackUser}>
-                    {getZabbixUserDisplay(ack)}
-                    <span className={styles.zabbixLabel}> (Zabbix)</span>
-                  </span>
-                  <span className={styles.ackTime}>on {ack.time}</span>
-                </div>
-                {ack.message && <div className={styles.ackMessage}>{ack.message}</div>}
-                {values.changeSeverity.includes(ack.action) && (
-                  <div className={styles.ackAction}>
-                    {/* @ts-ignore */}
-                    Changed severity from {ack.old_severity} to {ack.new_severity}
+                      )}
+                      {values.suppressProblem.includes(ack.action) &&
+                        // @ts-ignore
+                        (parseInt(ack.suppress_until, 10) === 0 ? (
+                          <div className={styles.ackAction}>Suppressed indefinitely</div>
+                        ) : (
+                          <div className={styles.ackAction}>
+                            {/* @ts-ignore */}
+                            Suppressed until {new Date(parseInt(ack.suppress_until, 10) * 1000).toLocaleString()}
+                          </div>
+                        ))}
+                      {values.unsuppressProblem.includes(ack.action) && (
+                        <div className={styles.ackAction}>Unsuppressed the problem</div>
+                      )}
+                      {values.closeProblem.includes(ack.action) && (
+                        <div className={styles.ackAction}>Manually closed the problem</div>
+                      )}
+                      {values.acknowledged.includes(ack.action) && <div className={styles.ackAction}>Acknowledged</div>}
+                      {values.unacknowledged.includes(ack.action) && (
+                        <div className={styles.ackAction}>Unacknowledged</div>
+                      )}
+                    </>
                   </div>
-                )}
-                {values.suppressProblem.includes(ack.action) &&
-                  // @ts-ignore
-                  (parseInt(ack.suppress_until, 10) === 0 ? (
-                    <div className={styles.ackAction}>Suppressed indefinitely</div>
-                  ) : (
+                );
+              }
+
+              return (
+                <div key={ack.acknowledgeid || index} className={styles.ackItem}>
+                  <div className={styles.ackHeader}>
+                    <span className={styles.ackUser}>
+                      {getZabbixUserDisplay(ack)}
+                      <span className={styles.zabbixLabel}> (Zabbix)</span>
+                    </span>
+                    <span className={styles.ackTime}>on {ack.time}</span>
+                  </div>
+                  {ack.message && <div className={styles.ackMessage}>{ack.message}</div>}
+                  {values.changeSeverity.includes(ack.action) && (
                     <div className={styles.ackAction}>
                       {/* @ts-ignore */}
-                      Suppressed until {new Date(parseInt(ack.suppress_until, 10) * 1000).toLocaleString()}
+                      Changed severity from {ack.old_severity} to {ack.new_severity}
                     </div>
-                  ))}
-                {values.unsuppressProblem.includes(ack.action) && (
-                  <div className={styles.ackAction}>Unsuppressed the problem</div>
-                )}
-                {values.closeProblem.includes(ack.action) && (
-                  <div className={styles.ackAction}>Manually closed the problem</div>
-                )}
-                {values.acknowledged.includes(ack.action) && <div className={styles.ackAction}>Acknowledged</div>}
-                {values.unacknowledged.includes(ack.action) && <div className={styles.ackAction}>Unacknowledged</div>}
-              </div>
-            );
-          })}
-        </div>,
-        document.body
-      )}
+                  )}
+                  {values.suppressProblem.includes(ack.action) &&
+                    // @ts-ignore
+                    (parseInt(ack.suppress_until, 10) === 0 ? (
+                      <div className={styles.ackAction}>Suppressed indefinitely</div>
+                    ) : (
+                      <div className={styles.ackAction}>
+                        {/* @ts-ignore */}
+                        Suppressed until {new Date(parseInt(ack.suppress_until, 10) * 1000).toLocaleString()}
+                      </div>
+                    ))}
+                  {values.unsuppressProblem.includes(ack.action) && (
+                    <div className={styles.ackAction}>Unsuppressed the problem</div>
+                  )}
+                  {values.closeProblem.includes(ack.action) && (
+                    <div className={styles.ackAction}>Manually closed the problem</div>
+                  )}
+                  {values.acknowledged.includes(ack.action) && <div className={styles.ackAction}>Acknowledged</div>}
+                  {values.unacknowledged.includes(ack.action) && <div className={styles.ackAction}>Unacknowledged</div>}
+                </div>
+              );
+            })}
+          </div>,
+          document.body
+        )}
     </>
   );
 };

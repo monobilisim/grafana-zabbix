@@ -18,6 +18,8 @@ export interface ProblemsPanelOptions {
   ageField?: boolean;
   opdataField?: boolean;
   applicationField?: boolean;
+  sourceField?: boolean;
+  assigneeField?: boolean;
   descriptionField?: boolean;
   descriptionAtNewLine?: boolean;
   showDatasourceName?: boolean;
@@ -45,6 +47,7 @@ export interface ProblemsPanelOptions {
   ackEventColor: TriggerColor;
   markAckEvents?: boolean;
   updateButtonColor?: TriggerColor;
+  updateButtonNonAdminColor?: TriggerColor;
 }
 
 export const DEFAULT_SEVERITY: TriggerSeverity[] = [
@@ -73,6 +76,8 @@ export const defaultPanelOptions: Partial<ProblemsPanelOptions> = {
   ageField: false,
   opdataField: false,
   applicationField: false,
+  sourceField: false,
+  assigneeField: false,
   descriptionField: true,
   descriptionAtNewLine: false,
   showDatasourceName: false,
@@ -98,6 +103,7 @@ export const defaultPanelOptions: Partial<ProblemsPanelOptions> = {
   ackEventColor: 'rgb(56, 219, 156)',
   markAckEvents: false,
   updateButtonColor: '#3274d9',
+  updateButtonNonAdminColor: '#f2a93b',
 };
 
 export interface ProblemsPanelTarget {

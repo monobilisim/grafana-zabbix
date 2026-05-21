@@ -54,27 +54,6 @@ function getAckMessageText(ack: ZBXAcknowledge): string {
   return ack.message ?? '';
 }
 
-async function navigateToGrafanaUser(info: AckUserInfo) {
-  let userId = info.grafanaUserId;
-  if (!userId && info.grafanaLogin) {
-    try {
-      const user = await getBackendSrv().get(`/api/users/lookup?loginOrEmail=${encodeURIComponent(info.grafanaLogin)}`);
-      userId = user?.id;
-    } catch {
-      // ignore — handled below
-    }
-  }
-  if (userId) {
-    locationService.push(`/admin/users/edit/${userId}`);
-  } else {
-    // @ts-ignore
-    getAppEvents().emit('alert-warning', [
-      'Kullanıcı bulunamadı',
-      `${info.grafanaLogin || info.displayName} Grafana'da bulunamadı`,
-    ]);
-  }
-}
-
 export default function AcknowledgesList(props: AcknowledgesListProps) {
   const { acknowledges } = props;
   return (
@@ -92,16 +71,7 @@ export default function AcknowledgesList(props: AcknowledgesListProps) {
           if (info.isGrafanaUser) {
             return (
               <span key={ack.acknowledgeid} className="problem-ack-user">
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navigateToGrafanaUser(info);
-                  }}
-                >
-                  {info.displayName}
-                </a>
+                {info.displayName}
               </span>
             );
           }

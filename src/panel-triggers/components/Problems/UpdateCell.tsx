@@ -83,7 +83,6 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem, buttonColor }) 
     const backend = getBackendSrv();
     const user = await backend.get('/api/user');
     const name = user.login;
-    const grafanaUserId = user.id;
 
     let actions = 0;
 
@@ -134,7 +133,7 @@ export const UpdateCell: React.FC<UpdateCellProps> = ({ problem, buttonColor }) 
 
       const ds: any = await getDataSourceSrv().get(problem.datasource);
 
-      const resString = JSON.stringify({ grafanaUser: name, grafanaUserId, message: message });
+      const resString = JSON.stringify({ grafanaUser: name, message: message });
 
       const unixEpoch = suppressUntilProblem ? Math.floor(suppressUntilProblem.valueOf() / 1000) : 0;
 
