@@ -196,6 +196,8 @@ export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDism
           instanceCache.set(key, instance);
         }
 
+        console.log(`Sending email for problem ${eventid} to group ${group} on datasource ${info.label} resulted`);
+
         const res = await instance.zabbix.executeScript(info.sendEmailScriptId, undefined, eventid, {
           manualinput: group,
         });
