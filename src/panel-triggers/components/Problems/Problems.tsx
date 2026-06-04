@@ -834,7 +834,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
         id: 'bulkSelect',
         sortable: false,
         filterable: false,
-        width: 80,
+        width: 40,
         Cell: (props: { original: ProblemDTO }) => (
           <input
             type="checkbox"
