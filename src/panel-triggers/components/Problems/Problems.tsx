@@ -573,21 +573,6 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     this.setState({ selectedEventIds: next });
   };
 
-  // Toggle selection for the whole rendered (filtered) problem set. If every
-  // rendered problem is already selected, this clears them; otherwise it
-  // selects all of them.
-  toggleSelectAll = (renderedProblems: ProblemDTO[]) => {
-    const renderedIds = renderedProblems.map((p) => p.eventid).filter((id): id is string => !!id);
-    const allSelected = renderedIds.length > 0 && renderedIds.every((id) => this.state.selectedEventIds.has(id));
-    const next = new Set(this.state.selectedEventIds);
-    if (allSelected) {
-      renderedIds.forEach((id) => next.delete(id));
-    } else {
-      renderedIds.forEach((id) => next.add(id));
-    }
-    this.setState({ selectedEventIds: next });
-  };
-
   handleProblemAck = (problem: ProblemDTO, data: AckProblemData) => {
     return this.props.onProblemAck!(problem, data);
   };
@@ -827,7 +812,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     };
   }
 
-  buildColumns(renderedProblems: ProblemDTO[]) {
+  buildColumns() {
     const options = this.props.panelOptions;
     const highlightNewerThan = options.highlightNewEvents && options.highlightNewerThan;
     const statusCell = (props: RTCell<ExtendedProblemDTO>) => StatusCell(props, highlightNewerThan);
@@ -844,6 +829,25 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     const dh = (text: string, id: string) => this.renderDraggableHeader(text, id, getVisibleColumnIds);
 
     const columns: any[] = [
+      {
+        Header: dh('Select', 'bulkSelect'),
+        id: 'bulkSelect',
+        sortable: false,
+        filterable: false,
+        width: 80,
+        Cell: (props: { original: ProblemDTO }) => (
+          <input
+            type="checkbox"
+            aria-label="Problemi seç"
+            checked={!!props.original.eventid && this.state.selectedEventIds.has(props.original.eventid)}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            onChange={(e: React.ChangeEvent) => {
+              e.stopPropagation();
+              this.toggleSelectOne(props.original.eventid);
+            }}
+          />
+        ),
+      },
       { Header: dh('Host', 'host'), id: 'host', show: options.hostField, Cell: hostNameCell },
       {
         Header: dh('IP', 'ip'),
@@ -1035,45 +1039,6 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     }
     visibleColumnIds = result.map((c) => getColumnId(c)).filter((id): id is string => !!id);
 
-    // Bulk-selection checkbox column. Always pinned first and excluded from the
-    // drag-to-reorder machinery above.
-    const renderedIds = renderedProblems.map((p) => p.eventid).filter((id): id is string => !!id);
-    const allSelected = renderedIds.length > 0 && renderedIds.every((id) => this.state.selectedEventIds.has(id));
-    const someSelected = renderedIds.some((id) => this.state.selectedEventIds.has(id));
-    const selectionColumn = {
-      Header: () => (
-        <input
-          type="checkbox"
-          aria-label="Tümünü seç"
-          title="Tümünü seç / kaldır"
-          checked={allSelected}
-          ref={(el: HTMLInputElement | null) => {
-            if (el) {
-              el.indeterminate = someSelected && !allSelected;
-            }
-          }}
-          onChange={() => this.toggleSelectAll(renderedProblems)}
-        />
-      ),
-      id: 'bulkSelect',
-      sortable: false,
-      filterable: false,
-      width: 40,
-      Cell: (props: { original: ProblemDTO }) => (
-        <input
-          type="checkbox"
-          aria-label="Problemi seç"
-          checked={!!props.original.eventid && this.state.selectedEventIds.has(props.original.eventid)}
-          onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          onChange={(e: React.ChangeEvent) => {
-            e.stopPropagation();
-            this.toggleSelectOne(props.original.eventid);
-          }}
-        />
-      ),
-    };
-    result.unshift(selectionColumn);
-
     return result;
   }
 
@@ -1121,7 +1086,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     }
 
     const problemsToRender = filteredProblems;
-    const columns = this.buildColumns(problemsToRender);
+    const columns = this.buildColumns();
     const selectedProblemObjs = problemsToRender.filter(
       (p) => !!p.eventid && this.state.selectedEventIds.has(p.eventid)
     );
@@ -1139,13 +1104,12 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           resized={panelOptions.resizedColumns}
           minRows={0}
           loading={this.props.loading}
-          TheadComponent={(headerProps) => {
+          TheadComponent={(headerProps: any) => {
             return (
               <>
                 <div className={getStyles().downloadButtonContainer}>
                   <Button
                     icon="envelope"
-                    variant="secondary"
                     disabled={selectedProblemObjs.length === 0}
                     onClick={() => this.setState({ bulkMailOpen: true })}
                     style={{ marginBottom: '10px' }}
