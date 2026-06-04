@@ -20,6 +20,7 @@ import { EmailModal } from './EmailModal';
 import { TicketModal } from './UpdateTicketModal';
 import { UpdateCell } from './UpdateCell';
 import { DownloadProblemsCsv } from './DownloadProblemsCsv';
+import { BulkMailModal } from './BulkMailModal';
 
 type ExtendedProblemDTO = ProblemDTO;
 
@@ -126,7 +127,7 @@ const onExecuteScript = async (
   return ds.zabbix.executeScript(scriptid, input, eventid);
 };
 
-const parseEmails = (scriptString: string) => {
+export const parseEmails = (scriptString: string) => {
   // Extract just the emails object by finding the boundaries
   const emailsStart = scriptString.indexOf('var emails = {');
   if (emailsStart === -1) {
@@ -188,7 +189,7 @@ function hasNonAdminUpdate(acknowledges?: any[]): boolean {
 
 // Fallback for the Python-based Send Email scrip, which
 // declares the dict as `emails = {` rather than `var emails = {`.
-const parseEmailsFallback = (scriptString: string) => {
+export const parseEmailsFallback = (scriptString: string) => {
   const emailsStart = scriptString.indexOf('emails = {');
   if (emailsStart === -1) {
     return [];
@@ -482,6 +483,8 @@ interface ProblemListState {
   draggingColumnId: string | null;
   dragOverColumnId: string | null;
   infoPopupProblem: ProblemDTO | null;
+  selectedEventIds: Set<string>;
+  bulkMailOpen: boolean;
 }
 
 export default class ProblemList extends PureComponent<ProblemListProps, ProblemListState> {
@@ -501,6 +504,8 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       draggingColumnId: null,
       dragOverColumnId: null,
       infoPopupProblem: null,
+      selectedEventIds: new Set(),
+      bulkMailOpen: false,
     };
   }
 
@@ -553,6 +558,34 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
 
   setRootRef = (ref: any) => {
     this.rootRef = ref;
+  };
+
+  toggleSelectOne = (eventid?: string) => {
+    if (!eventid) {
+      return;
+    }
+    const next = new Set(this.state.selectedEventIds);
+    if (next.has(eventid)) {
+      next.delete(eventid);
+    } else {
+      next.add(eventid);
+    }
+    this.setState({ selectedEventIds: next });
+  };
+
+  // Toggle selection for the whole rendered (filtered) problem set. If every
+  // rendered problem is already selected, this clears them; otherwise it
+  // selects all of them.
+  toggleSelectAll = (renderedProblems: ProblemDTO[]) => {
+    const renderedIds = renderedProblems.map((p) => p.eventid).filter((id): id is string => !!id);
+    const allSelected = renderedIds.length > 0 && renderedIds.every((id) => this.state.selectedEventIds.has(id));
+    const next = new Set(this.state.selectedEventIds);
+    if (allSelected) {
+      renderedIds.forEach((id) => next.delete(id));
+    } else {
+      renderedIds.forEach((id) => next.add(id));
+    }
+    this.setState({ selectedEventIds: next });
   };
 
   handleProblemAck = (problem: ProblemDTO, data: AckProblemData) => {
@@ -794,7 +827,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     };
   }
 
-  buildColumns() {
+  buildColumns(renderedProblems: ProblemDTO[]) {
     const options = this.props.panelOptions;
     const highlightNewerThan = options.highlightNewEvents && options.highlightNewerThan;
     const statusCell = (props: RTCell<ExtendedProblemDTO>) => StatusCell(props, highlightNewerThan);
@@ -1001,11 +1034,50 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       }
     }
     visibleColumnIds = result.map((c) => getColumnId(c)).filter((id): id is string => !!id);
+
+    // Bulk-selection checkbox column. Always pinned first and excluded from the
+    // drag-to-reorder machinery above.
+    const renderedIds = renderedProblems.map((p) => p.eventid).filter((id): id is string => !!id);
+    const allSelected = renderedIds.length > 0 && renderedIds.every((id) => this.state.selectedEventIds.has(id));
+    const someSelected = renderedIds.some((id) => this.state.selectedEventIds.has(id));
+    const selectionColumn = {
+      Header: () => (
+        <input
+          type="checkbox"
+          aria-label="Tümünü seç"
+          title="Tümünü seç / kaldır"
+          checked={allSelected}
+          ref={(el: HTMLInputElement | null) => {
+            if (el) {
+              el.indeterminate = someSelected && !allSelected;
+            }
+          }}
+          onChange={() => this.toggleSelectAll(renderedProblems)}
+        />
+      ),
+      id: 'bulkSelect',
+      sortable: false,
+      filterable: false,
+      width: 40,
+      Cell: (props: { original: ProblemDTO }) => (
+        <input
+          type="checkbox"
+          aria-label="Problemi seç"
+          checked={!!props.original.eventid && this.state.selectedEventIds.has(props.original.eventid)}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          onChange={(e: React.ChangeEvent) => {
+            e.stopPropagation();
+            this.toggleSelectOne(props.original.eventid);
+          }}
+        />
+      ),
+    };
+    result.unshift(selectionColumn);
+
     return result;
   }
 
   render() {
-    const columns = this.buildColumns();
     this.rootWidth = this.rootRef && this.rootRef.clientWidth;
     const { pageSize, fontSize, panelOptions } = this.props;
     const panelClass = cx('panel-problems', { [`font-size--${fontSize}`]: !!fontSize });
@@ -1049,6 +1121,10 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
     }
 
     const problemsToRender = filteredProblems;
+    const columns = this.buildColumns(problemsToRender);
+    const selectedProblemObjs = problemsToRender.filter(
+      (p) => !!p.eventid && this.state.selectedEventIds.has(p.eventid)
+    );
     const popupMode = panelOptions.infoTrigger === 'hover popup' || panelOptions.infoTrigger === 'click popup';
     const popupProblem = this.state.infoPopupProblem;
 
@@ -1067,6 +1143,15 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
             return (
               <>
                 <div className={getStyles().downloadButtonContainer}>
+                  <Button
+                    icon="envelope"
+                    variant="secondary"
+                    disabled={selectedProblemObjs.length === 0}
+                    onClick={() => this.setState({ bulkMailOpen: true })}
+                    style={{ marginBottom: '10px' }}
+                  >
+                    Bulk Mail ({selectedProblemObjs.length})
+                  </Button>
                   {Array.isArray(problemsToRender) && <DownloadProblemsCsv problemsToRender={problemsToRender} />}
                 </div>
                 {/* This is important - we still need to render the original header content */}
@@ -1161,6 +1246,11 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
             )}
           </Modal>
         )}
+        <BulkMailModal
+          isOpen={this.state.bulkMailOpen}
+          problems={selectedProblemObjs}
+          onDismiss={() => this.setState({ bulkMailOpen: false })}
+        />
       </div>
     );
   }
@@ -1365,6 +1455,7 @@ const getStyles = stylesFactory(() => {
     downloadButtonContainer: css`
       display: flex;
       justify-content: flex-end;
+      gap: 10px;
       margin-bottom: 10px;
     `,
     actionButtons: css`
