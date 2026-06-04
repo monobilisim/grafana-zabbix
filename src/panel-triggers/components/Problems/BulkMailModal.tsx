@@ -53,10 +53,43 @@ interface SendResult {
 const rawDatasourceKey = (ds: ProblemDTO['datasource']): string =>
   typeof ds === 'string' ? ds : JSON.stringify(ds ?? null);
 
+// Pull a human-readable message out of whatever was thrown/returned. Errors
+// from the Grafana backend / Zabbix JSON-RPC arrive as nested objects, so a
+// plain String(err) yields "[object Object]". This digs through the common
+// shapes and falls back to JSON so the real cause is always shown.
+const extractErrorMessage = (err: any): string => {
+  if (err == null) {
+    return 'Bilinmeyen hata';
+  }
+  if (typeof err === 'string') {
+    return err;
+  }
+
+  // Zabbix errors often split a generic message and the useful detail, e.g.
+  // { message: "Application error.", data: "Script is not allowed ..." }
+  const zbxMsg = err?.data?.error?.message ?? err?.error?.message;
+  const zbxData = err?.data?.error?.data ?? err?.error?.data;
+  if (zbxMsg || zbxData) {
+    return [zbxMsg, zbxData].filter(Boolean).join(' ').trim();
+  }
+
+  const candidates = [err?.data?.message, err?.data?.error, err?.data?.response, err?.statusText, err?.message];
+  const found = candidates.find((c) => typeof c === 'string' && c.trim() !== '');
+  if (found) {
+    return found;
+  }
+
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+};
+
 // Classify the outcome of a single executeScript call. Rate-limited responses
 // are surfaced separately so the user knows to retry them later.
-const classifyResponse = (value?: string): { status: SendStatus; detail?: string } => {
-  const text = (value ?? '').toString();
+const classifyResponse = (value?: unknown): { status: SendStatus; detail?: string } => {
+  const text = typeof value === 'string' ? value : value == null ? '' : extractErrorMessage(value);
   if (/limit|rate|too many|quota|throttl/i.test(text)) {
     return { status: 'limited', detail: text };
   }
@@ -113,7 +146,7 @@ export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDism
             companies: [],
             sendEmailScriptId: null,
             problemCount: groupProblems.length,
-            error: err instanceof Error ? err.message : 'Datasource scriptleri alınamadı',
+            error: extractErrorMessage(err) || 'Datasource scriptleri alınamadı',
           });
         }
       }
@@ -129,7 +162,7 @@ export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDism
       setDsInfos(infos);
       setSelectedGroupByDs(defaults);
     } catch (err) {
-      setPrepError(err instanceof Error ? err.message : 'Datasource bilgileri hazırlanamadı');
+      setPrepError(extractErrorMessage(err) || 'Datasource bilgileri hazırlanamadı');
     } finally {
       setLoading(false);
     }
@@ -203,7 +236,7 @@ export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDism
         });
 
         if (res && res.response === 'failed') {
-          collected.push({ ...base, status: 'failed', detail: res.value });
+          collected.push({ ...base, status: 'failed', detail: extractErrorMessage(res.value ?? res) });
         } else {
           const { status, detail } = classifyResponse(res?.value);
           collected.push({ ...base, status, detail });
@@ -212,7 +245,7 @@ export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDism
         collected.push({
           ...base,
           status: 'error',
-          detail: err instanceof Error ? err.message : String(err),
+          detail: extractErrorMessage(err),
         });
       }
 
