@@ -22,6 +22,8 @@ interface BulkMailModalProps {
   isOpen: boolean;
   problems: ProblemDTO[];
   onDismiss: () => void;
+  // Called once a bulk send finishes so the parent can clear the selection.
+  onSent?: () => void;
 }
 
 // Per-datasource information collected once the modal is opened: the available
@@ -96,7 +98,7 @@ const classifyResponse = (value?: unknown): { status: SendStatus; detail?: strin
   return { status: 'success', detail: text };
 };
 
-export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDismiss }) => {
+export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDismiss, onSent }) => {
   const styles = useStyles2(getStyles);
   const [loading, setLoading] = useState(false);
   const [prepError, setPrepError] = useState<string | null>(null);
@@ -177,7 +179,11 @@ export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDism
       setProgress({ done: 0, total: 0 });
       setSending(false);
     }
-  }, [isOpen, prepare]);
+    // Only (re)prepare when the modal opens/closes — not when `problems`
+    // changes underneath us (e.g. the parent clearing the selection after a
+    // send), which would otherwise wipe the results view.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleGroupChange = (dsKey: string, group: string) => {
     setSelectedGroupByDs((prev) => ({ ...prev, [dsKey]: group }));
@@ -255,6 +261,9 @@ export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDism
     setResults(collected);
     setSending(false);
     reportResults(collected);
+    // Clear the selection in the parent now that these problems have been
+    // processed, so the mailed rows aren't left looking still-selected.
+    onSent?.();
   };
 
   // Surface the outcome through Grafana's alert (error) library: a success
@@ -300,7 +309,8 @@ export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDism
     <Modal title="Toplu E-posta Gönderimi" isOpen={isOpen} onDismiss={onDismiss}>
       <div className={styles.container}>
         <div className={styles.summary}>
-          Seçilen problem sayısı: <strong>{problems.length}</strong> · Datasource sayısı:{' '}
+          {results !== null ? 'İşlenen' : 'Seçilen'} problem sayısı:{' '}
+          <strong>{results !== null ? results.length : problems.length}</strong> · Datasource sayısı:{' '}
           <strong>{dsInfos.length}</strong>
         </div>
 

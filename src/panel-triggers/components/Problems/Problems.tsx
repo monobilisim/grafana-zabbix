@@ -1214,6 +1214,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           isOpen={this.state.bulkMailOpen}
           problems={selectedProblemObjs}
           onDismiss={() => this.setState({ bulkMailOpen: false })}
+          onSent={() => this.setState({ selectedEventIds: new Set() })}
         />
       </div>
     );
