@@ -23,7 +23,7 @@ interface BulkMailModalProps {
   problems: ProblemDTO[];
   onDismiss: () => void;
   // Called once a bulk send finishes so the parent can clear the selection.
-  onSent?: () => void;
+  onSent: () => void;
 }
 
 // Per-datasource information collected once the modal is opened: the available
@@ -263,7 +263,7 @@ export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDism
     reportResults(collected);
     // Clear the selection in the parent now that these problems have been
     // processed, so the mailed rows aren't left looking still-selected.
-    onSent?.();
+    onSent();
   };
 
   // Surface the outcome through Grafana's alert (error) library: a success
