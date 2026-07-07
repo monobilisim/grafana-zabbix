@@ -5,7 +5,6 @@ import { GrafanaTheme2 } from '@grafana/data';
 import { getDataSourceSrv, getAppEvents } from '@grafana/runtime';
 import { ProblemDTO } from '../../../datasource/types';
 import { ZBXScript } from '../../../datasource/zabbix/connectors/zabbix_api/types';
-import { closeTicketForProblem } from './Problems';
 
 interface BulkCloseTicketModalProps {
   isOpen: boolean;
