@@ -21,6 +21,7 @@ import { TicketModal } from './UpdateTicketModal';
 import { UpdateCell } from './UpdateCell';
 import { DownloadProblemsCsv } from './DownloadProblemsCsv';
 import { BulkMailModal } from './BulkMailModal';
+import { BulkCloseTicketModal } from './BulkCloseTicketModal';
 
 type ExtendedProblemDTO = ProblemDTO;
 
@@ -125,6 +126,33 @@ const onExecuteScript = async (
   const ds: any = await getDataSourceSrv().get(problem.datasource);
 
   return ds.zabbix.executeScript(scriptid, input, eventid);
+};
+
+// Close the ticket associated with a problem by running the datasource's
+// "Close Ticket" script. Shared by the single-row action button and the bulk
+// close modal so both go through the exact same execution path. Optionally
+// accepts an already-resolved datasource instance and/or script id to avoid
+// re-resolving them for every problem in a bulk run. Throws when the script is
+// missing so callers can surface the failure.
+export const closeTicketForProblem = async (
+  problem: ProblemDTO,
+  scriptid?: string,
+  instance?: any
+): Promise<APIExecuteScriptResponse> => {
+  const ds: any = instance ?? (await getDataSourceSrv().get(problem.datasource));
+
+  let sid = scriptid;
+  if (!sid) {
+    const scripts: ZBXScript[] = await ds.zabbix.getScripts();
+    const script = scripts.find((s) => s.name === 'Close Ticket');
+    if (!script) {
+      throw new Error('"Close Ticket" scripti bulunamadı');
+    }
+    sid = script.scriptid;
+  }
+
+  const eventid = problem.eventid && problem.eventid.trim() !== '' ? problem.eventid : undefined;
+  return ds.zabbix.executeScript(sid, undefined, eventid);
 };
 
 export const parseEmails = (scriptString: string) => {
@@ -485,6 +513,7 @@ interface ProblemListState {
   infoPopupProblem: ProblemDTO | null;
   selectedEventIds: Set<string>;
   bulkMailOpen: boolean;
+  bulkCloseOpen: boolean;
 }
 
 export default class ProblemList extends PureComponent<ProblemListProps, ProblemListState> {
@@ -506,6 +535,7 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
       infoPopupProblem: null,
       selectedEventIds: new Set(),
       bulkMailOpen: false,
+      bulkCloseOpen: false,
     };
   }
 
@@ -1109,6 +1139,14 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
               <>
                 <div className={getStyles().downloadButtonContainer}>
                   <Button
+                    icon="times-circle"
+                    disabled={selectedProblemObjs.length === 0}
+                    onClick={() => this.setState({ bulkCloseOpen: true })}
+                    style={{ marginBottom: '10px' }}
+                  >
+                    Bulk Close Ticket ({selectedProblemObjs.length})
+                  </Button>
+                  <Button
                     icon="envelope"
                     disabled={selectedProblemObjs.length === 0}
                     onClick={() => this.setState({ bulkMailOpen: true })}
@@ -1215,6 +1253,12 @@ export default class ProblemList extends PureComponent<ProblemListProps, Problem
           problems={selectedProblemObjs}
           onDismiss={() => this.setState({ bulkMailOpen: false })}
           onSent={() => this.setState({ selectedEventIds: new Set() })}
+        />
+        <BulkCloseTicketModal
+          isOpen={this.state.bulkCloseOpen}
+          problems={selectedProblemObjs}
+          onDismiss={() => this.setState({ bulkCloseOpen: false })}
+          onClosed={() => this.setState({ selectedEventIds: new Set() })}
         />
       </div>
     );
