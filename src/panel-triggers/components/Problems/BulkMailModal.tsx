@@ -6,6 +6,7 @@ import { getDataSourceSrv, getAppEvents } from '@grafana/runtime';
 import { ProblemDTO } from '../../../datasource/types';
 import { ZBXScript } from '../../../datasource/zabbix/connectors/zabbix_api/types';
 import { parseEmails, parseEmailsFallback } from './Problems';
+import { usesLegacyEmailScripts, resolveLegacyEmailScripts } from './legacyEmailScripts';
 
 export const parseCompanies = (command?: string): string[] => {
   if (!command) {
@@ -37,6 +38,9 @@ interface DatasourceInfo {
   sendEmailScriptId: string | null;
   problemCount: number;
   error?: string;
+  // Zabbix < 7.0 only: group label -> scriptid of its "Send Email <group>"
+  // script. When set, the send path uses these ids instead of manualinput.
+  legacyScriptIdByCompany?: Record<string, string>;
 }
 
 type SendStatus = 'success' | 'failed' | 'limited' | 'error';
@@ -130,6 +134,25 @@ export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDism
         try {
           const ds: any = await getDataSourceSrv().get(datasource);
           const scripts: ZBXScript[] = await ds.zabbix.getScripts();
+          // Zabbix < 7.0 has no manualinput: each group is its own
+          // "Send Email <group>" script, so offer those as the groups.
+          if (await usesLegacyEmailScripts(ds)) {
+            const { companies, scriptIdByCompany } = resolveLegacyEmailScripts(scripts);
+            infos.push({
+              key,
+              label: ds?.name || (typeof datasource === 'string' ? datasource : 'Datasource'),
+              datasource,
+              companies,
+              // Kept non-null so the existing readiness checks treat this
+              // datasource as sendable; handleSend picks the per-group id.
+              sendEmailScriptId: companies.length > 0 ? scriptIdByCompany[companies[0]] : null,
+              legacyScriptIdByCompany: scriptIdByCompany,
+              problemCount: groupProblems.length,
+              error: companies.length > 0 ? undefined : '"Send Email <grup>" scripti bulunamadı',
+            });
+            continue;
+          }
+
           const emailScript = scripts.find((s) => s.name === 'Send Email');
           infos.push({
             key,
@@ -236,6 +259,21 @@ export const BulkMailModal: FC<BulkMailModalProps> = ({ isOpen, problems, onDism
         }
 
         console.log(`Sending email for problem ${eventid} to group ${group} on datasource ${info.label} resulted`);
+
+        // Zabbix < 7.0 fallback: the group has its own "Send Email <group>"
+        // script and the server rejects manualinput, so run that script alone.
+        const legacyScriptId = info.legacyScriptIdByCompany?.[group];
+        if (legacyScriptId) {
+          const legacyRes = await instance.zabbix.executeScript(legacyScriptId, undefined, eventid);
+          if (legacyRes && legacyRes.response === 'failed') {
+            collected.push({ ...base, status: 'failed', detail: extractErrorMessage(legacyRes.value ?? legacyRes) });
+          } else {
+            const { status, detail } = classifyResponse(legacyRes?.value);
+            collected.push({ ...base, status, detail });
+          }
+          setProgress({ done: i + 1, total: problems.length });
+          continue;
+        }
 
         const res = await instance.zabbix.executeScript(info.sendEmailScriptId, undefined, eventid, {
           manualinput: group,

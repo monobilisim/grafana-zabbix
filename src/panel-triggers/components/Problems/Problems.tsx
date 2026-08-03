@@ -22,6 +22,7 @@ import { UpdateCell } from './UpdateCell';
 import { DownloadProblemsCsv } from './DownloadProblemsCsv';
 import { BulkMailModal } from './BulkMailModal';
 import { BulkCloseTicketModal } from './BulkCloseTicketModal';
+import { usesLegacyEmailScripts, resolveLegacyEmailScripts } from './legacyEmailScripts';
 
 type ExtendedProblemDTO = ProblemDTO;
 
@@ -244,6 +245,8 @@ function ActionButtons(props: { original: ProblemDTO }) {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [ticketId, setTicketId] = useState('');
   const [currentProblemForTicket, setCurrentProblemForTicket] = useState(null);
+  // Zabbix < 7.0 only: group label -> scriptid of its "Send Email <group>" script.
+  const [legacyEmailScriptIds, setLegacyEmailScriptIds] = useState<Record<string, string>>({});
   const [scriptIDS, setScriptIDS] = useState({
     sendEmail: '',
     closeTicket: '',
@@ -310,6 +313,18 @@ function ActionButtons(props: { original: ProblemDTO }) {
       const ds: any = await getDataSourceSrv().get(problem.datasource);
       const scripts: ZBXScript[] = await ds.zabbix.getScripts();
 
+      // Zabbix < 7.0 has no manualinput: each group is its own
+      // "Send Email <group>" script, so list those as the groups.
+      if (await usesLegacyEmailScripts(ds)) {
+        const { companies: legacyCompanies, scriptIdByCompany } = resolveLegacyEmailScripts(scripts);
+        setLegacyEmailScriptIds(scriptIdByCompany);
+        setCompanies(legacyCompanies as any);
+        setCurrentProblem(problem);
+        setShowEmailModal(true);
+        return;
+      }
+      setLegacyEmailScriptIds({});
+
       // Find the "Send Email" script
       const emailScript = scripts.find((script) => script.name === 'Send Email');
 
@@ -331,6 +346,14 @@ function ActionButtons(props: { original: ProblemDTO }) {
 
   const sendEmail = async () => {
     const ds: any = await getDataSourceSrv().get(currentProblem.datasource);
+
+    // Zabbix < 7.0 fallback: run the group's own script, without manualinput.
+    const legacyScriptId = legacyEmailScriptIds[manualInput];
+    if (legacyScriptId) {
+      // @ts-ignore
+      getAppEvents().emit('alert-success', ['Success', 'Send Email çağırıldı']);
+      return ds.zabbix.executeScript(legacyScriptId, undefined, currentProblem.eventid);
+    }
 
     const scripts: ZBXScript[] = await ds.zabbix.getScripts();
 
